@@ -1,0 +1,26 @@
+$! This command procedure runs the test
+$! for 'git status --branch -s (--short)' command
+$!
+$ TEST_NAME = "GIT_STATUS_BRANCH_2"
+$ OUT_DIR = f$trnlnm("GITTEST$ROOT","LNM$PROCESS_TABLE")
+$ CWD = f$directory()
+$!
+$ PIPE CREATE/DIRECTORY [.TEST] > NL: 2> NL:
+$ SET DEFAULT [.TEST]
+$ PIPE git init > NL: 2> NL:
+$!	
+$ CREATE test1.txt 
+$ PIPE git config user.email "you@example.com" > NL: 2> NL:
+$ PIPE git config user.name "Your Name" > NL: 2> NL:
+$ PIPE git add test1.txt  > NL: 2> NL:
+$ PIPE git commit -m "Add test1.txt" > NL: 2> NL:
+$!
+$ PIPE git branch test-branch > NL: 2> NL:
+$ PIPE git checkout test-branch > NL: 2> NL:
+$ CREATE test.txt 
+$ PIPE git add test.txt  > NL: 2> NL:
+$ PIPE git status --branch -s | @'OUT_DIR'TEE  'CWD''TEST_NAME'.OUT
+$ SET DEFAULT [-]
+$ @'OUT_DIR'REPORT_DIFF_RESULT.COM
+$!
+$ EXIT

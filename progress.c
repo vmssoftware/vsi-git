@@ -18,6 +18,9 @@
 #include "trace2.h"
 #include "utf8.h"
 #include "parse.h"
+#ifdef __VMS
+	#include "vms_wrapper.h"
+#endif
 
 #define TP_IDX_MAX      8
 
@@ -79,7 +82,9 @@ static void set_progress_signal(void)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = progress_interval;
 	sigemptyset(&sa.sa_mask);
+#ifndef __VMS
 	sa.sa_flags = SA_RESTART;
+#endif
 	sigaction(SIGALRM, &sa, NULL);
 
 	v.it_interval.tv_sec = 1;
@@ -241,8 +246,13 @@ void display_throughput(struct progress *progress, uint64_t total)
 	tp->idx = (tp->idx + 1) % TP_IDX_MAX;
 
 	throughput_string(&tp->display, total, rate);
+#ifdef __VMS
+	if (progress->last_value != UINT64_MAX && progress_update)
+		display(progress, progress->last_value, NULL);
+#else
 	if (progress->last_value != -1 && progress_update)
 		display(progress, progress->last_value, NULL);
+#endif
 }
 
 void display_progress(struct progress *progress, uint64_t n)
@@ -361,8 +371,13 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 	*p_progress = NULL;
 
 	finish_if_sparse(progress);
+#ifdef __VMS
+	if (progress->last_value != UINT64_MAX)
+		force_last_update(progress, msg);
+#else
 	if (progress->last_value != -1)
 		force_last_update(progress, msg);
+#endif
 	log_trace2(progress);
 
 	clear_progress_signal();

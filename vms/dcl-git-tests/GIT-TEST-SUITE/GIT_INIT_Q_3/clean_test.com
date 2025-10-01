@@ -1,0 +1,37 @@
+$ OUT_DIR = f$trnlnm("GITTEST$ROOT","LNM$PROCESS_TABLE")
+$!
+$ LOG_FILES = F$SEARCH("*.LOG;*")
+$ IF LOG_FILES .NES. ""
+$ THEN
+$   DELETE *.LOG;*
+$ ENDIF
+$!
+$ OUT_FILES = F$SEARCH("*.OUT;*")
+$ IF OUT_FILES .NES. ""
+$ THEN
+$   DELETE *.OUT;*
+$ ENDIF
+$!
+$ TEST_FOLDER = F$SEARCH("TEST.DIR;1")
+$ IF TEST_FOLDER .NES. ""
+$ THEN
+$   @'OUT_DIR'REMOVE_DIR TEST
+$ ENDIF
+$!
+$ OBJ_FILES = F$SEARCH("*.OBJ;*")
+$ IF OBJ_FILES .NES. ""
+$ THEN
+$   DELETE *.OBJ;*
+$ ENDIF
+$!
+$ EXE_FILES = F$SEARCH("*.EXE;*")
+$ IF EXE_FILES .NES. ""
+$ THEN
+$   DELETE *.EXE;*
+$ ENDIF
+$!
+$ GIT_INIT_Q_FILES = F$SEARCH("git_init_q_3.exp;*")
+$ IF GIT_INIT_Q_FILES .NES. ""
+$ THEN
+$   DELETE git_init_q_3.exp;*
+$ ENDIF

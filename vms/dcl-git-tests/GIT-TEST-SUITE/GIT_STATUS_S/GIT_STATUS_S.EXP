@@ -1,0 +1,4 @@
+AM test_file_1.txt
+A  test_file_2.txt
+AD test_file_4.txt
+?? test_file_3.txt

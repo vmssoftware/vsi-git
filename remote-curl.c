@@ -22,6 +22,9 @@
 #include "transport.h"
 #include "url.h"
 #include "write-or-die.h"
+#ifdef __VMS
+#include "curl_loader.h"
+#endif
 
 static struct remote *remote;
 /* always ends with a trailing slash */
@@ -1527,6 +1530,11 @@ static int stateless_connect(const char *service_name)
 
 int cmd_main(int argc, const char **argv)
 {
+#ifdef __VMS
+	if (load_curl_functions())
+		die("Failed to load libcurl. Please ensure that the libcurl library is installed and properly configured on your system.");
+#endif
+
 	struct strbuf buf = STRBUF_INIT;
 	int nongit;
 	int ret = 1;
@@ -1631,6 +1639,8 @@ int cmd_main(int argc, const char **argv)
 	ret = 0;
 cleanup:
 	strbuf_release(&buf);
-
+#ifdef __VMS
+	unload_curl_functions();
+#endif
 	return ret;
 }

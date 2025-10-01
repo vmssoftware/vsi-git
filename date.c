@@ -71,13 +71,21 @@ static time_t gm_time_t(timestamp_t time, int tz)
 static struct tm *time_to_tm(timestamp_t time, int tz, struct tm *tm)
 {
 	time_t t = gm_time_t(time, tz);
+#ifdef __VMS
+	return gmtime_r(&t, (tm_short)tm);
+#else
 	return gmtime_r(&t, tm);
+#endif
 }
 
 static struct tm *time_to_tm_local(timestamp_t time, struct tm *tm)
 {
 	time_t t = time;
+#ifdef __VMS
+	return localtime_r(&t, (tm_short)tm);
+#else
 	return localtime_r(&t, tm);
+#endif
 }
 
 /*
@@ -89,7 +97,12 @@ static int local_time_tzoffset(time_t t, struct tm *tm)
 	time_t t_local;
 	int offset, eastwest;
 
+#ifdef __VMS
+	localtime_r(&t, (tm_short)tm);
+#else
 	localtime_r(&t, tm);
+#endif
+
 	t_local = tm_to_time_t(tm);
 	if (t_local == -1)
 		return 0; /* error; just use +0000 */
@@ -677,7 +690,11 @@ static int match_digit(const char *date, struct tm *tm, int *offset, int *tm_gmt
 	 */
 	if (num >= 100000000 && nodate(tm)) {
 		time_t time = num;
+#ifdef __VMS
+		if (gmtime_r(&time, (tm_short)tm)) {
+#else
 		if (gmtime_r(&time, tm)) {
+#endif
 			*tm_gmt = 1;
 			return end - date;
 		}
@@ -917,7 +934,11 @@ int parse_date_basic(const char *date, timestamp_t *timestamp, int *offset)
 
 	/* do not use mktime(), which uses local timezone, here */
 	*timestamp = tm_to_time_t(&tm);
+#ifdef __VMS
+	if (*timestamp == (time_t)-1)
+#else
 	if (*timestamp == -1)
+#endif
 		return -1;
 
 	if (*offset == -1) {
@@ -1071,7 +1092,11 @@ static time_t update_tm(struct tm *tm, struct tm *now, time_t sec)
 	}
 
 	n = mktime(tm) - sec;
+#ifdef __VMS
+	localtime_r(&n, (tm_short)tm);
+#else
 	localtime_r(&n, tm);
+#endif
 	return n;
 }
 
@@ -1172,7 +1197,11 @@ static void date_am(struct tm *tm, struct tm *now UNUSED, int *num)
 static void date_never(struct tm *tm, struct tm *now UNUSED, int *num)
 {
 	time_t n = 0;
+#ifdef __VMS
+	localtime_r(&n, (tm_short)tm);
+#else
 	localtime_r(&n, tm);
+#endif
 	*num = 0;
 }
 

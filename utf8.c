@@ -495,7 +495,8 @@ char *reencode_string_iconv(const char *in, size_t insz, iconv_t conv,
 	cp = (iconv_ibp)in;
 
 	while (1) {
-		size_t cnt = iconv(conv, &cp, &insz, &outpos, &outsz);
+		size_t cnt;
+		cnt = iconv(conv, &cp, &insz, &outpos, &outsz);
 
 		if (cnt == (size_t) -1) {
 			size_t sofar;

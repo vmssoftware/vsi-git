@@ -1711,6 +1711,20 @@ struct path_pattern *last_matching_pattern(struct dir_struct *dir,
 				      const char *pathname,
 				      int *dtype_p)
 {
+#ifdef __VMS
+	if (!strcmp(pathname, ".gitignore")) {
+		struct strbuf packs_data_path = STRBUF_INIT;
+		strbuf_addstr(&packs_data_path, get_git_work_tree());
+		strbuf_addstr(&packs_data_path, "/.gitignore");
+		if (!access_or_warn(packs_data_path.buf, F_OK, 0)) {
+			if (makefile_stream_lf(packs_data_path.buf) != SS$_NORMAL)
+				warning("unable to change record format of the '%s' file", packs_data_path.buf);
+		} else {
+			fprintf(stderr, "Unable to access the file: %s\n", packs_data_path.buf);
+		}
+		strbuf_release(&packs_data_path);
+	}
+#endif
 	int pathlen = strlen(pathname);
 	const char *basename = strrchr(pathname, '/');
 	basename = (basename) ? basename+1 : pathname;
@@ -2343,6 +2357,28 @@ static enum path_treatment treat_path(struct dir_struct *dir,
 		return path_none;
 	strbuf_setlen(path, baselen);
 	strbuf_addstr(path, cdir->d_name);
+
+#ifdef __VMS
+	/* 
+	** Delete '.' from filenames if it appears only as the last character.
+	** This way we will support files without extensions but we can't have files that end at just '.' .
+	*/
+	int cnt = 0;
+
+	for (int i = 0; i < path->len; i++) {
+		if (path->buf[i] == '.')
+			cnt++;
+
+		if (cnt > 1)
+			break;
+	}
+
+	if (cnt == 1 && path->buf[path->len - 1] == '.') {
+		path->buf[path->len - 1] = '\0';
+		path->len -= 1;
+	}
+#endif
+
 	if (simplify_away(path->buf, path->len, pathspec))
 		return path_none;
 

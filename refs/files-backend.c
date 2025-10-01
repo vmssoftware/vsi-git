@@ -22,7 +22,9 @@
 #include "../write-or-die.h"
 #include "../revision.h"
 #include <wildmatch.h>
-
+#ifdef __VMS
+#include <vms_wrapper.h>
+#endif
 /*
  * This backend uses the following flags in `ref_update::flags` for
  * internal bookkeeping purposes. Their numerical values must not
@@ -266,7 +268,10 @@ static void loose_fill_ref_dir(struct ref_store *ref_store,
 		if (ends_with(de->d_name, ".lock"))
 			continue;
 		strbuf_addstr(&refname, de->d_name);
-
+#ifdef __VMS
+		if (strstr(dirname, "refs/"))
+			remove_last_char_if_dot(refname.buf);
+#endif
 		dtype = get_dtype(de, &path, 1);
 		if (dtype == DT_DIR) {
 			strbuf_addch(&refname, '/');
@@ -1270,7 +1275,11 @@ static int files_pack_refs(struct ref_store *ref_store,
  * IOW, to avoid cross device rename errors, the temporary renamed log must
  * live into logs/refs.
  */
-#define TMP_RENAMED_LOG  "refs/.tmp-renamed-log"
+#ifndef __VMS
+	#define TMP_RENAMED_LOG  "refs/.tmp-renamed-log"
+#else
+	#define TMP_RENAMED_LOG  "refs/tmp-renamed-log"
+#endif
 
 struct rename_cb {
 	const char *tmp_renamed_log;
@@ -2162,6 +2171,9 @@ static int files_reflog_iterator_peel(struct ref_iterator *ref_iterator UNUSED,
 				      struct object_id *peeled UNUSED)
 {
 	BUG("ref_iterator_peel() called for reflog_iterator");
+#ifdef __VMS
+	return -1;
+#endif
 }
 
 static int files_reflog_iterator_abort(struct ref_iterator *ref_iterator)

@@ -218,10 +218,23 @@ int read_mailmap(struct string_list *map)
 	if (!git_mailmap_blob && is_bare_repository())
 		git_mailmap_blob = "HEAD:.mailmap";
 
-	if (!startup_info->have_repository || !is_bare_repository())
+	if (!startup_info->have_repository || !is_bare_repository()) {
+#ifdef __VMS
+		char *fname = NULL;
+		if (access(".mailmap", R_OK) != -1)
+			fname = ".mailmap";
+		else
+			fname = "^.mailmap";
+
+		err |= read_mailmap_file(map, fname,
+					 startup_info->have_repository ?
+					 MAILMAP_NOFOLLOW : 0);
+#else
 		err |= read_mailmap_file(map, ".mailmap",
 					 startup_info->have_repository ?
 					 MAILMAP_NOFOLLOW : 0);
+#endif
+	}
 	if (startup_info->have_repository)
 		err |= read_mailmap_blob(map, git_mailmap_blob);
 	err |= read_mailmap_file(map, git_mailmap_file, 0);

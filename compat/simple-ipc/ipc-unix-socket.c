@@ -6,6 +6,9 @@
 #include "trace2.h"
 #include "unix-socket.h"
 #include "unix-stream-server.h"
+#ifdef __VMS
+	#include <vms_wrapper.h>
+#endif
 
 #ifndef SUPPORTS_SIMPLE_IPC
 /*

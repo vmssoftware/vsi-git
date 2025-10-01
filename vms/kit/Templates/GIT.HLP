@@ -1,0 +1,636 @@
+1  GIT
+
+	Git is a fast, scalable, distributed revision control system with an
+	unusually rich command set that provides both high-level operations
+	and full access to internals.
+
+	Usage:
+
+		o To define the necessary VSI GIT symbols and set up the environment
+		  for using Git commands, the user must execute the following script:
+			$ @SYS$STARTUP:GIT$STARTUP.COM
+
+		  or to ensure VSI GIT starts automatically, request the system
+		  administrator to add the following line to SYS$MANAGER:SYLOGIN.COM:
+
+			$ GITSTART := SYS$STARTUP:GIT$STARTUP.COM
+			$ IF f$search("''GITSTART'") .NES. "" THEN @'GITSTART'
+
+		o Make sure that the process parsing style is set with
+		  SET PROCESS/PARSE_STYLE=EXTENDED when using VSI Git.
+
+		o Before running Git commands that modify the working directory or
+		  history (e.g., STASH, RESET, MERGE, CHECKOUT), ensure that only
+		  one version of each file is available by purging older versions
+		  if necessary.
+
+		For more information please refer to: https://git-scm.com/docs/git.
+
+2  ADD
+
+	This command updates the index using the current content found
+	in the working tree, to prepare the content staged for the next commit.
+	It typically adds the current content of existing paths as a whole,
+	but with some options it can also be used to add content with only
+	part of the changes made to the working tree files applied, or
+	remove paths that do not exist in the working tree anymore.
+
+	Command Syntax:
+
+		git add [--verbose | -v] [--dry-run | -n] [--force | -f]
+			[--interactive | -i] [--patch | -p] [--edit | -e]
+			[--[no-]all | -A | --[no-]ignore-removal | [--update | -u]]
+			[--sparse] [--intent-to-add | -N] [--refresh] [--ignore-errors]
+			[--ignore-missing] [--renormalize] [--chmod=(+|-)x]
+			[--pathspec-from-file=<file> [--pathspec-file-nul]]
+			[--] [<pathspec>…​]
+
+2  APPLY
+
+	Reads the supplied diff output (i.e. "a patch") and applies it to files.
+	When running from a subdirectory in a repository, patched paths outside
+	the directory are ignored. With the --index option, the patch is also
+	applied to the index, and with the --cached option, the patch is only
+	applied to the index. Without these options, the command applies the
+	patch only to files, and does not require them to be in a Git repository.
+
+	Command Syntax:
+
+		git apply [--stat] [--numstat] [--summary] [--check]
+			[--index | --intent-to-add] [--3way] [--apply] [--no-add]
+			[--build-fake-ancestor=<file>] [-R | --reverse]
+			[--allow-binary-replacement | --binary] [--reject] [-z]
+			[-p<n>] [-C<n>] [--inaccurate-eof] [--recount] [--cached]
+			[--ignore-space-change | --ignore-whitespace]
+			[--whitespace=(nowarn|warn|fix|error|error-all)]
+			[--exclude=<path>] [--include=<path>] [--directory=<root>]
+			[--verbose | --quiet] [--unsafe-paths] [--allow-empty] [<patch>…​]
+
+2  BISECT
+
+	This command uses a binary search algorithm to find which commit in your project’s
+	history introduced a bug. You use it by first telling it a "bad" commit that is
+	known to contain the bug, and a "good" commit that is known to be before the
+	bug was introduced.
+
+	Command Syntax:
+
+		git bisect start [--term-(bad|new)=<term-new> --term-(good|old)=<term-old>]
+			[--no-checkout] [--first-parent] [<bad> [<good>...]] [--] [<pathspec>...]
+		git bisect (bad|new|<term-new>) [<rev>]
+		git bisect (good|old|<term-old>) [<rev>...]
+		git bisect terms [--term-(good|old) | --term-(bad|new)]
+		git bisect skip [(<rev>|<range>)...]
+		git bisect reset [<commit>]
+		git bisect (visualize|view)
+		git bisect replay <logfile>
+		git bisect log
+		git bisect run <cmd> [<arg>...]
+		git bisect help
+
+2  BLAME
+
+	Annotates each line in the given file with information from the
+	revision which last modified the line. Optionally, start annotating
+	from the given revision.
+
+	Command Syntax:
+
+		git blame [-c] [-b] [-l] [--root] [-t] [-f] [-n] [-s] [-e] [-p] [-w]
+			[--incremental] [-L <range>] [-S <revs-file>] [-M] [-C] [-C] [-C]
+			[--since=<date>] [--ignore-rev <rev>] [--ignore-revs-file <file>]
+			[--color-lines] [--color-by-age] [--progress] [--abbrev=<n>]
+			[ --contents <file> ] [<rev> | --reverse <rev>..<rev>] [--] <file>
+
+2  BRANCH
+
+	If --list is given, or if there are no non-option arguments,
+	existing branches are listed; the current branch will be
+	highlighted in green and marked with an asterisk.
+	Any branches checked out in linked worktrees will
+	be highlighted in cyan and marked with a plus sign.
+	Option -r causes the remote-tracking branches to be listed,
+	and option -a shows both local and remote branches.
+
+	Command Syntax:
+
+		git branch [--color[=<when>] | --no-color] [--show-current]
+			[-v [--abbrev=<n> | --no-abbrev]]
+			[--column[=<options>] | --no-column] [--sort=<key>]
+			[--merged [<commit>]] [--no-merged [<commit>]]
+			[--contains [<commit>]] [--no-contains [<commit>]]
+			[--points-at <object>] [--format=<format>]
+			[(-r | --remotes) | (-a | --all)]
+			[--list] [<pattern>…​]
+		git branch [--track[=(direct|inherit)] | --no-track] [-f]
+			[--recurse-submodules] <branchname> [<start-point>]
+		git branch (--set-upstream-to=<upstream> | -u <upstream>) [<branchname>]
+		git branch --unset-upstream [<branchname>]
+		git branch (-m | -M) [<oldbranch>] <newbranch>
+		git branch (-c | -C) [<oldbranch>] <newbranch>
+		git branch (-d | -D) [-r] <branchname>…​
+		git branch --edit-description [<branchname>]
+
+2  CHERRY-PICK
+
+	Given one or more existing commits, apply the change each one introduces,
+	recording a new commit for each. This requires your working tree to be
+	clean (no modifications from the HEAD commit).
+
+	Command Syntax:
+
+		git cherry-pick [--edit] [-n] [-m <parent-number>] [-s] [-x] [--ff]
+			[-S[<keyid>]] <commit>…​
+		git cherry-pick (--continue | --skip | --abort | --quit)
+
+2  CHECKOUT
+
+	Updates files in the working tree to match the version
+	in the index or the specified tree.
+	If no pathspec was given, git checkout will also update
+	HEAD to set the specified branch as the current branch.
+
+	Command Syntax:
+
+		git checkout [-q] [-f] [-m] [<branch>]
+		git checkout [-q] [-f] [-m] --detach [<branch>]
+		git checkout [-q] [-f] [-m] [--detach] <commit>
+		git checkout [-q] [-f] [-m] [[-b|-B|--orphan] <new-branch>] [<start-point>]
+		git checkout [-f] <tree-ish> [--] <pathspec>…​
+		git checkout [-f] <tree-ish> --pathspec-from-file=<file> [--pathspec-file-nul]
+		git checkout [-f|--ours|--theirs|-m|--conflict=<style>] [--] <pathspec>…​
+		git checkout [-f|--ours|--theirs|-m|--conflict=<style>]
+			--pathspec-from-file=<file> [--pathspec-file-nul]
+		git checkout (-p|--patch) [<tree-ish>] [--] [<pathspec>…​]
+
+2  CLEAN
+
+	Cleans the working tree by recursively removing files that
+	are not under version control, starting from the current directory.
+
+	Command Syntax:
+
+		git clean [-d] [-f] [-i] [-n] [-q] [-e <pattern>]
+			[-x | -X] [--] [<pathspec>…​]
+
+2  CLONE
+
+	Clones a repository into a newly created directory, creates
+	remote-tracking branches for each branch in the cloned repository
+	(visible using git branch --remotes), and creates and checks out an
+	initial branch that is forked from the cloned repository’s currently
+	active branch.
+
+	Command Syntax:
+
+		git clone [--template=<template-directory>]
+			[-l] [-s] [--no-hardlinks] [-q] [-n] [--bare] [--mirror]
+			[-o <name>] [-b <name>] [-u <upload-pack>] [--reference <repository>]
+			[--dissociate] [--separate-git-dir <git-dir>]
+			[--depth <depth>] [--[no-]single-branch] [--no-tags]
+			[--recurse-submodules[=<pathspec>]] [--[no-]shallow-submodules]
+			[--[no-]remote-submodules] [--jobs <n>] [--sparse] [--[no-]reject-shallow]
+			[--filter=<filter> [--also-filter-submodules]] [--] <repository>
+			[<directory>]
+
+2  COMMIT
+
+	Create a new commit containing the current contents of the index
+	and the given log message describing the changes. The new commit is
+	a direct child of HEAD, usually the tip of the current branch, and
+	the branch is updated to point to it (unless no branch is associated
+	with the working tree, in which case HEAD is "detached" as described
+	in git-checkout[1]).
+
+	Command Syntax:
+
+		git commit [-a | --interactive | --patch] [-s] [-v] [-u<mode>] [--amend]
+			[--dry-run] [(-c | -C | --squash) <commit> | --fixup [(amend|reword):]<commit>]
+			[-F <file> | -m <msg>] [--reset-author] [--allow-empty]
+			[--allow-empty-message] [--no-verify] [-e] [--author=<author>]
+			[--date=<date>] [--cleanup=<mode>] [--[no-]status]
+			[-i | -o] [--pathspec-from-file=<file> [--pathspec-file-nul]]
+			[(--trailer <token>[(=|:)<value>])…​] [-S[<keyid>]]
+			[--] [<pathspec>…​]
+
+2  CONFIG
+
+	User can query/set/replace/unset options with this command.
+	The name is actually the section and the key separated by a
+	dot, and the value will be escaped.
+
+	Command Syntax:
+
+		git config list [<file-option>] [<display-option>] [--includes]
+		Git config get [<file-option>] [<display-option>] [--includes]
+			[--all] [--regexp] [--value=<value>] [--fixed-value]
+			[--default=<default>] <name>
+		git config set [<file-option>] [--type=<type>] [--all]
+			[--value=<value>] [--fixed-value] <name> <value>
+		git config unset [<file-option>] [--all] [--value=<value>]
+			[--fixed-value] <name> <value>
+		git config rename-section [<file-option>] <old-name> <new-name>
+		git config remove-section [<file-option>] <name>
+		git config edit [<file-option>]
+		git config [<file-option>] --get-colorbool <name> [<stdout-is-tty>]
+
+2  DESCRIBE
+
+	The command finds the most recent tag that is reachable from a commit.
+	If the tag points to the commit, then only the tag is shown. Otherwise,
+	it suffixes the tag name with the number of additional commits on top
+	of the tagged object and the abbreviated object name of the most recent
+	commit. The result is a "human-readable" object name which can also be
+	used to identify the commit to other git commands.
+
+	Command Syntax:
+
+		git describe [--all] [--tags] [--contains] [--abbrev=<n>] [<commit-ish>…​]
+		git describe [--all] [--tags] [--contains] [--abbrev=<n>] --dirty[=<mark>]
+		git describe <blob>
+
+2  DIFF
+
+	Show changes between the working tree and the index or a tree, changes
+	between the index and a tree, changes between two trees, changes
+	resulting from a merge, changes between two blob objects, or changes
+	between two files on disk.
+
+	Command Syntax:
+
+		git diff [<options>] [<commit>] [--] [<path>…​]
+		git diff [<options>] --cached [--merge-base] [<commit>] [--] [<path>…​]
+		git diff [<options>] [--merge-base] <commit> [<commit>…​] <commit> [--] [<path>…​]
+		git diff [<options>] <commit>…​<commit> [--] [<path>…​]
+		git diff [<options>] <blob> <blob>
+		git diff [<options>] --no-index [--] <path> <path>
+
+2  FETCH
+
+	Fetch branches and/or tags (collectively, "refs") from one or more other
+	repositories, along with the objects necessary to complete their histories.
+	Remote-tracking branches are updated (see the description of <refspec>
+	below for ways to control this behavior).
+
+	Command Syntax:
+
+		git fetch [<options>] [<repository> [<refspec>…​]]
+		git fetch [<options>] <group>
+		git fetch --multiple [<options>] [(<repository> | <group>)…​]
+		git fetch --all [<options>]
+
+2  GREP
+
+	Look for specified patterns in the tracked files in the work tree,
+	blobs registered in the index file, or blobs in given tree objects.
+	Patterns are lists of one or more search expressions separated by
+	newline characters. An empty string as search expression matches all lines.
+
+	Command Syntax:
+
+		git grep [-a | --text] [-I] [--textconv] [-i | --ignore-case] [-w | --word-regexp]
+			[-v | --invert-match] [-h|-H] [--full-name]
+			[-E | --extended-regexp] [-G | --basic-regexp]
+			[-P | --perl-regexp]
+			[-F | --fixed-strings] [-n | --line-number] [--column]
+			[-l | --files-with-matches] [-L | --files-without-match]
+			[(-O | --open-files-in-pager) [<pager>]]
+			[-z | --null]
+			[ -o | --only-matching ] [-c | --count] [--all-match] [-q | --quiet]
+			[--max-depth <depth>] [--[no-]recursive]
+			[--color[=<when>] | --no-color]
+			[--break] [--heading] [-p | --show-function]
+			[-A <post-context>] [-B <pre-context>] [-C <context>]
+			[-W | --function-context]
+			[(-m | --max-count) <num>]
+			[--threads <num>]
+			[-f <file>] [-e] <pattern>
+			[--and|--or|--not|(|)|-e <pattern>…​]
+			[--recurse-submodules] [--parent-basename <basename>]
+			[ [--[no-]exclude-standard] [--cached | --untracked | --no-index] | <tree>…​]
+			[--] [<pathspec>…​]
+
+2  HELP
+
+	With no options and no <command> or <doc> given, the synopsis of
+	the git command and a list of the most commonly used Git
+	commands are printed on the standard output.
+
+	Command Syntax:
+
+		git help [-a|--all] [--[no-]verbose] [--[no-]external-commands] [--[no-]aliases]
+		git help [[-i|--info] [-m|--man] [-w|--web]] [<command>|<doc>]
+		git help [-g|--guides]
+		git help [-c|--config]
+		git help [--user-interfaces]
+		git help [--developer-interfaces]
+
+2  INIT
+
+	This command creates an empty Git repository - basically a .git directory
+	with subdirectories for objects, refs/heads, refs/tags, and template files.
+	An initial branch without any commits will be created.
+
+	Command Syntax:
+
+		git init [-q | --quiet] [--bare] [--template=<template-directory>]
+			[--separate-git-dir <git-dir>] [--object-format=<format>]
+			[--ref-format=<format>]
+			[-b <branch-name> | --initial-branch=<branch-name>]
+			[--shared[=<permissions>]] [<directory>]
+
+2  LOG
+
+	Shows the commit logs.
+	List commits that are reachable by following the
+	parent links from the given commit(s), but exclude
+	commits that are reachable from the one(s) given with
+	a ^ in front of them. The output is given in reverse
+	chronological order by default
+
+	Command Syntax:
+
+		git log [<options>] [<revision-range>] [[--] <path>…​]
+
+2  MERGE
+
+	Incorporates changes from the named commits
+	(since the time their histories diverged from the current branch)
+	into the current branch. This command is used by git pull to
+	incorporate changes from another repository and can be
+	used by hand to merge changes from one branch into another.
+
+	Command Syntax:
+
+		git merge [-n] [--stat] [--no-commit] [--squash] [--[no-]edit]
+			[--no-verify] [-s <strategy>] [-X <strategy-option>] [-S[<keyid>]]
+			[--[no-]allow-unrelated-histories]
+			[--[no-]rerere-autoupdate] [-m <msg>] [-F <file>]
+			[--into-name <branch>] [<commit>…​]
+		git merge (--continue | --abort | --quit)
+
+2  MV
+
+	Move or rename a file, directory, or symlink.
+
+	Command Syntax:
+
+		git mv [<options>] <source>…​ <destination>
+
+2  NOTES
+
+	Adds, removes, or reads notes attached to objects,
+	without touching the objects themselves.
+
+	Command Syntax:
+
+		git notes [list [<object>]]
+		git notes add [-f] [--allow-empty] [--[no-]separator | --separator=<paragraph-break>]
+			[--[no-]stripspace] [-F <file> | -m <msg> | (-c | -C) <object>] [<object>]
+		git notes copy [-f] ( --stdin | <from-object> [<to-object>] )
+		git notes append [--allow-empty] [--[no-]separator | --separator=<paragraph-break>]
+			[--[no-]stripspace] [-F <file> | -m <msg> | (-c | -C) <object>] [<object>]
+		git notes edit [--allow-empty] [<object>] [--[no-]stripspace]
+		git notes show [<object>]
+		git notes merge [-v | -q] [-s <strategy> ] <notes-ref>
+		git notes merge --commit [-v | -q]
+		git notes merge --abort [-v | -q]
+		git notes remove [--ignore-missing] [--stdin] [<object>…​]
+		git notes prune [-n] [-v]
+		git notes get-ref
+
+2  PULL 
+
+	Incorporates changes from a remote repository into the current branch.
+	If the current branch is behind the remote, then by default it will
+	fast-forward the current branch to match the remote. If the current
+	branch and the remote have diverged, the user needs to specify how to
+	reconcile the divergent branches with --rebase or --no-rebase
+	(or the corresponding configuration option in pull.rebase)
+
+	Command Syntax:
+
+		git pull [<options>] [<repository> [<refspec>…​]]
+
+2  PUSH
+
+	Updates remote refs using local refs, while sending objects
+	necessary to complete the given refs.
+
+	Command Syntax:
+
+		git push [--all | --branches | --mirror | --tags] 
+			[--follow-tags] [--atomic] [-n | --dry-run]
+			[--receive-pack=<git-receive-pack>] [--repo=<repository>]
+			[-f | --force] [-d | --delete] [--prune] [-q | --quiet] [-v | --verbose]
+			[-u | --set-upstream] [-o <string> | --push-option=<string>]
+			[--[no-]signed|--signed=(true|false|if-asked)]
+			[--force-with-lease[=<refname>[:<expect>]] [--force-if-includes]]
+			[--no-verify] [<repository> [<refspec>…​]]
+
+2  RANGE-DIFF
+
+	This command shows the differences between two versions of a patch
+	series, or more generally, two commit ranges (ignoring merge commits).
+
+	Command Syntax:
+
+		git range-diff [--color=[<when>]] [--no-color] [<diff-options>]
+			[--no-dual-color] [--creation-factor=<factor>]
+			[--left-only | --right-only]
+			( <range1> <range2> | <rev1>…​<rev2> | <base> <rev1> <rev2> )
+			[[--] <path>…​]
+
+2  REBASE
+
+	If <branch> is specified, git rebase will perform an automatic
+	git switch <branch> before doing anything else. Otherwise it
+	remains on the current branch.
+
+	Command Syntax:
+
+		git rebase [-i | --interactive] [<options>] [--exec <cmd>]
+			[--onto <newbase> | --keep-base] [<upstream> [<branch>]]
+		git rebase [-i | --interactive] [<options>] [--exec <cmd>]
+			[--onto <newbase>] --root [<branch>]
+		git rebase (--continue | --skip | --abort | --quit |
+								--edit-todo | --show-current-patch)
+
+2  RESET
+
+	Reset current HEAD to the specified state.
+
+	Command Syntax:
+
+		git reset [-q] [<tree-ish>] [--] <pathspec>…​
+		git reset [-q] [--pathspec-from-file=<file> [--pathspec-file-nul]] [<tree-ish>]
+		git reset (--patch | -p) [<tree-ish>] [--] [<pathspec>…​]
+		git reset [--soft | --mixed [-N] | --hard | --merge | --keep] [-q] [<commit>]
+
+2  RESTORE
+
+	Restore specified paths in the working tree with
+	some contents from a restore source. If a path is
+	tracked but does not exist in the restore source,
+	it will be removed to match the source.
+
+	Command Syntax:
+
+		git restore [<options>] [--source=<tree>] [--staged]
+			[--worktree] [--] <pathspec>…​
+		git restore [<options>] [--source=<tree>] [--staged]
+			[--worktree] --pathspec-from-file=<file> [--pathspec-file-nul]
+		git restore (-p|--patch) [<options>] [--source=<tree>] [--staged]
+			[--worktree] [--] [<pathspec>…​]
+
+2  REVERT
+
+	Given one or more existing commits, revert the changes that the
+	related patches introduce, and record some new commits that record them.
+	This requires your working tree to be  clean (no modifications from the HEAD commit).
+
+	Command Syntax:
+
+		git revert [--[no-]edit] [-n] [-m <parent-number>]
+			[-s] [-S[<keyid>]] <commit>…​
+		git revert (--continue | --skip | --abort | --quit)
+
+2  RM
+
+	Remove files matching pathspec from the index,
+	or from the working tree and the index. git rm
+	will not remove a file from just your working directory.
+	
+	Command Syntax:
+
+		git rm [-f | --force] [-n] [-r] [--cached] [--ignore-unmatch]
+			[--quiet] [--pathspec-from-file=<file> [--pathspec-file-nul]]
+			[--] [<pathspec>…​]
+
+2  SHORTLOG
+
+	Summarizes git log output in a format suitable for inclusion
+	in release announcements. Each commit will be grouped by
+	author and title.
+
+	Command Syntax:
+
+		git shortlog [<options>] [<revision-range>] [[--] <path>…​]
+		git log --pretty=short | git shortlog [<options>]
+
+2  SHOW
+
+	Shows one or more objects (blobs, trees, tags and commits).
+
+	Command Syntax:
+
+		git show [<options>] [<object>…​]
+
+2  STASH
+
+	Use git stash when you want to record the current state of the working directory
+	and the index, but want to go back to a clean working directory. The command saves
+	your local modifications away and reverts the working directory to match the HEAD commit.
+
+	Command Syntax:
+
+		git stash list [<log-options>]
+		git stash show [-u | --include-untracked | --only-untracked] [<diff-options>] [<stash>]
+		git stash drop [-q | --quiet] [<stash>]
+		git stash pop [--index] [-q | --quiet] [<stash>]
+		git stash apply [--index] [-q | --quiet] [<stash>]
+		git stash branch <branchname> [<stash>]
+		git stash [push [-p | --patch] [-S | --staged] [-k | --[no-]keep-index]
+			[-q | --quiet]
+			[-u | --include-untracked] [-a | --all] [(-m | --message) <message>]
+			[--pathspec-from-file=<file> [--pathspec-file-nul]]
+			[--] [<pathspec>…​]]
+		git stash save [-p | --patch] [-S | --staged] [-k | --[no-]keep-index] 
+			[-q | --quiet]
+			[-u | --include-untracked] [-a | --all] [<message>]
+		git stash clear
+		git stash create [<message>]
+		git stash store [(-m | --message) <message>] [-q | --quiet] <commit>
+
+2  STATUS
+
+	Displays paths that have differences between the index file
+	and the current HEAD commit, paths that have differences between
+	the working tree and the index file, and paths in the working tree
+	that are not tracked by Git (and are not ignored by gitignore[5]).
+	The first are what you would commit by running git commit;
+	the second and third are what you could commit by running
+	git add before running git commit.
+
+	Command Syntax:
+
+		git status [<options>] [--] [<pathspec>…​]
+
+2  SWITCH
+
+	Switch to a specified branch. The working tree and the index are updated
+	to match the branch. All new commits will be added to the tip of this branch.
+
+	Command Syntax:
+
+		git switch [<options>] [--no-guess] <branch>
+		git switch [<options>] --detach [<start-point>]
+		git switch [<options>] (-c|-C) <new-branch> [<start-point>]
+		git switch [<options>] --orphan <new-branch>
+
+2  TAG
+
+	Add a tag reference in refs/tags/, unless -d/-l/-v is
+	given to delete, list or verify tags.
+
+	Command Syntax:
+
+		git tag [-a | -s | -u <key-id>] [-f] [-m <msg> | -F <file>] [-e]
+			<tagname> [<commit> | <object>]
+		git tag -d <tagname>…​
+		git tag [-n[<num>]] -l [--contains <commit>] [--no-contains <commit>]
+			[--points-at <object>] [--column[=<options>] | --no-column]
+			[--create-reflog] [--sort=<key>] [--format=<format>]
+			[--merged <commit>] [--no-merged <commit>] [<pattern>…​]
+		git tag -v [--format=<format>] <tagname>…​
+
+2  VERSION
+
+	With no options given, the version of git is printed on the standard output.
+
+	Command Syntax:
+
+		git version [--build-options]
+
+2  WORKTREE
+
+	Manage multiple working trees attached to the same repository.
+
+	Command Syntax:
+
+		git worktree add [-f] [--detach] [--checkout] [--lock [--reason <string>]]
+			[--orphan] [(-b | -B) <new-branch>] <path> [<commit-ish>]
+		git worktree list [-v | --porcelain [-z]]
+		git worktree lock [--reason <string>] <worktree>
+		git worktree move <worktree> <new-path>
+		git worktree prune [-n] [-v] [--expire <expire>]
+		git worktree remove [-f] <worktree>
+		git worktree repair [<path>…​]
+		git worktree unlock <worktree>
+
+2  Known_Issues
+
+	o Users may encounter an RPC error when executing Git commands, typically due to
+	  network issues, large files, or limitations with Git configurations.
+	  The error message may be:
+		error: RPC failed; curl 18 HTTP/2 stream 1 was not closed cleanly before end of
+		the underlying connection
+		error: 386 bytes of body are still expected
+		fatal: early EOFpected disconnect while reading sideband packet
+
+	  To resolve this issue, users can:
+		1. Use SSH Authentication: Switch to SSH authentication (e.g., git@).
+		2. Limit the Depth of the Clone: Use the --depth option to perform a shallow clone.
+
+	o If you can't get valid CA Certificate try:
+		$ DEFINE GIT_SSL_NO_VERIFY 1

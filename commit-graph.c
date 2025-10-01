@@ -2031,10 +2031,10 @@ static int write_commit_graph_file(struct write_commit_graph_context *ctx)
 		char *lock_name = get_commit_graph_chain_filename(ctx->odb);
 
 		hold_lock_file_for_update_mode(&lk, lock_name,
-					       LOCK_DIE_ON_ERROR, 0444);
+					       LOCK_DIE_ON_ERROR, 0666);
 		free(lock_name);
 
-		fd = git_mkstemp_mode(ctx->graph_name, 0444);
+		fd = git_mkstemp_mode(ctx->graph_name, 0666);
 		if (fd < 0) {
 			error(_("unable to create temporary graph layer"));
 			return -1;
@@ -2049,7 +2049,7 @@ static int write_commit_graph_file(struct write_commit_graph_context *ctx)
 		f = hashfd(fd, ctx->graph_name);
 	} else {
 		hold_lock_file_for_update_mode(&lk, ctx->graph_name,
-					       LOCK_DIE_ON_ERROR, 0444);
+					       LOCK_DIE_ON_ERROR, 0666);
 		fd = get_lock_file_fd(&lk);
 		f = hashfd(fd, get_lock_file_path(&lk));
 	}

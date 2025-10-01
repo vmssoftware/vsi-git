@@ -5,6 +5,9 @@
 #include "string-list.h"
 #include "utf8.h"
 #include "date.h"
+#ifdef __VMS
+#include <unixlib.h>
+#endif
 
 int starts_with(const char *str, const char *prefix)
 {
@@ -567,7 +570,11 @@ int strbuf_getcwd(struct strbuf *sb)
 
 	for (;; guessed_len *= 2) {
 		strbuf_grow(sb, guessed_len);
+#ifdef __VMS
+		if (getcwd(sb->buf, sb->alloc, 0)) {
+#else
 		if (getcwd(sb->buf, sb->alloc)) {
+#endif
 			strbuf_setlen(sb, strlen(sb->buf));
 			return 0;
 		}

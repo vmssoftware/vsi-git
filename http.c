@@ -17,6 +17,9 @@
 #include "string-list.h"
 #include "object-file.h"
 #include "object-store-ll.h"
+#ifdef __VMS
+#include "curl_loader.h"
+#endif
 
 static struct trace_key trace_curl = TRACE_KEY_INIT(CURL);
 static int trace_curl_data = 1;
@@ -2190,6 +2193,11 @@ static int http_request_reauth(const char *url,
 	default:
 		BUG("Unknown http_request target");
 	}
+
+#ifdef __VMS
+	/* Workaround for git clone printing empty line */
+	fprintf(stderr, "\b");
+#endif
 
 	credential_fill(&http_auth);
 

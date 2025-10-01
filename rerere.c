@@ -359,7 +359,7 @@ static int handle_conflict(struct strbuf *out, struct rerere_io *io,
 	struct strbuf buf = STRBUF_INIT, conflict = STRBUF_INIT;
 	int has_conflicts = -1;
 
-	while (!io->getline(&buf, io)) {
+	while (!((*io->getline)(&buf, io))) {
 		if (is_cmarker(buf.buf, '<', marker_size)) {
 			if (handle_conflict(&conflict, io, marker_size, NULL) < 0)
 				break;
@@ -430,7 +430,7 @@ static int handle_path(unsigned char *hash, struct rerere_io *io, int marker_siz
 	if (hash)
 		the_hash_algo->init_fn(&ctx);
 
-	while (!io->getline(&buf, io)) {
+	while (!((*io->getline)(&buf, io)))  {
 		if (is_cmarker(buf.buf, '<', marker_size)) {
 			has_conflicts = handle_conflict(&out, io, marker_size,
 							hash ? &ctx : NULL);

@@ -30,12 +30,18 @@ static int use_sideband_colors(void)
 
 	const char *key = "color.remote";
 	struct strbuf sb = STRBUF_INIT;
+/*
+** VMS_TODO: Need to avoid ifndef directives by transferring
+** necessary global arguments to the child process.
+*/
+#ifndef __VMS
 	char *value;
+#endif
 	int i;
 
 	if (use_sideband_colors_cached >= 0)
 		return use_sideband_colors_cached;
-
+#ifndef __VMS
 	if (!git_config_get_string(key, &value)) {
 		use_sideband_colors_cached = git_config_colorbool(key, value);
 	} else if (!git_config_get_string("color.ui", &value)) {
@@ -43,7 +49,11 @@ static int use_sideband_colors(void)
 	} else {
 		use_sideband_colors_cached = GIT_COLOR_AUTO;
 	}
+#else
+	use_sideband_colors_cached = GIT_COLOR_AUTO;
+#endif
 
+#ifndef __VMS
 	for (i = 0; i < ARRAY_SIZE(keywords); i++) {
 		strbuf_reset(&sb);
 		strbuf_addf(&sb, "%s.%s", key, keywords[i].keyword);
@@ -53,6 +63,7 @@ static int use_sideband_colors(void)
 			continue;
 	}
 	strbuf_release(&sb);
+#endif
 	return use_sideband_colors_cached;
 }
 

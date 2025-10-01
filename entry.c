@@ -13,6 +13,9 @@
 #include "fsmonitor.h"
 #include "entry.h"
 #include "parallel-checkout.h"
+#ifdef __VMS
+#include "vms_wrapper.h"
+#endif
 
 static void create_directories(const char *path, int path_len,
 			       const struct checkout *state)
@@ -192,6 +195,18 @@ int finish_delayed_checkout(struct checkout *state, int show_progress)
 				filter->string = "";
 				continue;
 			}
+#ifdef __VMS
+			if (available_paths.nr == 0 || available_paths.nr == SIZE_MAX) {
+				/*
+				 * Filter responded with no entries. That means
+				 * the filter is done and we can remove the
+				 * filter from the list (see
+				 * "string_list_remove_empty_items" call below).
+				 */
+				filter->string = "";
+				continue;
+			}
+#else
 			if (available_paths.nr <= 0) {
 				/*
 				 * Filter responded with no entries. That means
@@ -202,7 +217,7 @@ int finish_delayed_checkout(struct checkout *state, int show_progress)
 				filter->string = "";
 				continue;
 			}
-
+#endif
 			/*
 			 * In dco->paths we store a list of all delayed paths.
 			 * The filter just send us a list of available paths.

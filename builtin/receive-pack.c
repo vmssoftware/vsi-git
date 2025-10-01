@@ -477,7 +477,11 @@ static void rp_error(const char *err, ...)
 	va_end(params);
 }
 
+#ifdef __VMS
+int copy_to_sideband(int in, int out UNUSED, void *arg UNUSED)
+#else
 static int copy_to_sideband(int in, int out UNUSED, void *arg UNUSED)
+#endif
 {
 	char data[128];
 	int keepalive_active = 0;

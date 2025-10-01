@@ -691,11 +691,17 @@ static int run_update(struct add_i_state *s, const struct pathspec *ps,
 
 	opts->prompt = N_("Update");
 	count = list_and_choose(s, files, opts);
+#ifdef __VMS
+	if (count == 0 || count == SIZE_MAX) {
+		putchar('\n');
+		return 0;
+	}
+#else
 	if (count <= 0) {
 		putchar('\n');
 		return 0;
 	}
-
+#endif
 	fd = repo_hold_locked_index(s->r, &index_lock, LOCK_REPORT_ON_ERROR);
 	if (fd < 0) {
 		putchar('\n');
@@ -778,9 +784,13 @@ static int run_revert(struct add_i_state *s, const struct pathspec *ps,
 
 	opts->prompt = N_("Revert");
 	count = list_and_choose(s, files, opts);
+#ifdef __VMS
+	if (count == 0 || count == SIZE_MAX)
+		goto finish_revert;
+#else
 	if (count <= 0)
 		goto finish_revert;
-
+#endif
 	fd = repo_hold_locked_index(s->r, &index_lock, LOCK_REPORT_ON_ERROR);
 	if (fd < 0) {
 		res = -1;
@@ -889,9 +899,13 @@ static int run_add_untracked(struct add_i_state *s, const struct pathspec *ps,
 	d->only_names = 1;
 	count = list_and_choose(s, files, opts);
 	d->only_names = 0;
+#ifdef __VMS
+	if (count == 0 || count == SIZE_MAX)
+		goto finish_add_untracked;
+#else
 	if (count <= 0)
 		goto finish_add_untracked;
-
+#endif
 	fd = repo_hold_locked_index(s->r, &index_lock, LOCK_REPORT_ON_ERROR);
 	if (fd < 0) {
 		res = -1;

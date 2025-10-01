@@ -294,7 +294,12 @@ int odb_mkstemp(struct strbuf *temp_filename, const char *pattern)
 	 * we let the umask do its job, don't try to be more
 	 * restrictive except to remove write permission.
 	 */
+#ifdef __VMS
+	/* To be able to rename files in /.git/objects/pack folder. */
+	int mode = 0666;
+#else
 	int mode = 0444;
+#endif
 	git_path_buf(temp_filename, "objects/%s", pattern);
 	fd = git_mkstemp_mode(temp_filename->buf, mode);
 	if (0 <= fd)

@@ -16,6 +16,9 @@
 #include "quote.h"
 #include "trace2.h"
 #include "worktree.h"
+#ifdef __VMS
+#include <unixlib.h>
+#endif
 
 static int inside_git_dir = -1;
 static int inside_work_tree = -1;
@@ -1097,8 +1100,19 @@ static const char *setup_bare_git_dir(struct strbuf *cwd, int offset,
 
 static dev_t get_device_or_die(const char *path, const char *prefix, int prefix_len)
 {
+	const char *target_path = path;
+#ifdef __VMS
+	if (!strcmp(path, "/"))
+		target_path = ".";
+#endif
+
 	struct stat buf;
-	if (stat(path, &buf)) {
+#ifdef __VMS
+	/* We can't stat root path(/) without system privileges. */
+	if (stat(target_path, &buf) == -1) {
+#else
+	if (stat(target_path, &buf)) {
+#endif
 		die_errno(_("failed to stat '%*s%s%s'"),
 				prefix_len,
 				prefix ? prefix : "",

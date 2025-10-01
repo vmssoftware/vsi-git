@@ -466,7 +466,9 @@ static void setup_early_output(void)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = early_output;
 	sigemptyset(&sa.sa_mask);
+#ifndef __VMS
 	sa.sa_flags = SA_RESTART;
+#endif
 	sigaction(SIGALRM, &sa, NULL);
 
 	/*
@@ -536,6 +538,9 @@ static int cmd_log_walk_no_free(struct rev_info *rev)
 			saved_nrl = rev->diffopt.needed_rename_limit;
 		if (rev->diffopt.degraded_cc_to_c)
 			saved_dcctc = 1;
+#ifdef __VMS
+		fwrite(GIT_COLOR_RESET, sizeof(char), strlen(GIT_COLOR_RESET), rev->diffopt.file);
+#endif
 	}
 	rev->diffopt.degraded_cc_to_c = saved_dcctc;
 	rev->diffopt.needed_rename_limit = saved_nrl;

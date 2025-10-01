@@ -15,6 +15,9 @@
 int cmd__simple_ipc(int argc, const char **argv)
 {
 	die("simple IPC not available on this platform");
+#ifdef __VMS
+	return -1;
+#endif
 }
 #else
 

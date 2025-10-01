@@ -124,8 +124,11 @@ static char *strbuf_realpath_1(struct strbuf *resolved, const char *path,
 		if (!is_dir_sep(resolved->buf[resolved->len - 1]))
 			strbuf_addch(resolved, '/');
 		strbuf_addbuf(resolved, &next);
-
 		if (lstat(resolved->buf, &st)) {
+#ifdef __VMS
+			if (errno == EPERM)
+				continue;
+#endif
 			/* error out unless this was the last component */
 			if (errno != ENOENT ||
 			   (!(flags & REALPATH_MANY_MISSING) && remaining.len)) {
@@ -298,7 +301,14 @@ void strbuf_add_absolute_path(struct strbuf *sb, const char *path)
 		struct stat cwd_stat, pwd_stat;
 		size_t orig_len = sb->len;
 		char *cwd = xgetcwd();
-		char *pwd = getenv("PWD");
+		char *pwd = NULL;
+#ifdef __VMS
+		pwd = get_cwd();
+		if (!pwd)
+			die("Failed to get current working directory");
+#else
+		pwd = getenv("PWD");
+#endif
 		if (pwd && strcmp(pwd, cwd) &&
 		    !stat(cwd, &cwd_stat) &&
 		    (cwd_stat.st_dev || cwd_stat.st_ino) &&
@@ -311,6 +321,9 @@ void strbuf_add_absolute_path(struct strbuf *sb, const char *path)
 		if (sb->len > orig_len && !is_dir_sep(sb->buf[sb->len - 1]))
 			strbuf_addch(sb, '/');
 		free(cwd);
+#ifdef __VMS
+		free(pwd);
+#endif
 	}
 	strbuf_addstr(sb, path);
 }

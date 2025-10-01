@@ -1,4 +1,7 @@
 #include "../git-compat-util.h"
+#ifdef __VMS
+#include "vms_wrapper.h"
+#endif
 
 char *gitmkdtemp(char *template)
 {

@@ -1518,14 +1518,26 @@ int cmd_status(int argc, const char **argv, const char *prefix)
 		{ OPTION_STRING, 'u', "untracked-files", &untracked_files_arg,
 		  N_("mode"),
 		  N_("show untracked files, optional modes: all, normal, no. (Default: all)"),
+#ifdef __VMS
+		  PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *)"all" },
+#else
 		  PARSE_OPT_OPTARG, NULL, (intptr_t)"all" },
+#endif
 		{ OPTION_STRING, 0, "ignored", &ignored_arg,
 		  N_("mode"),
 		  N_("show ignored files, optional modes: traditional, matching, no. (Default: traditional)"),
+#ifdef __VMS
+		  PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *)"traditional" },
+#else
 		  PARSE_OPT_OPTARG, NULL, (intptr_t)"traditional" },
+#endif
 		{ OPTION_STRING, 0, "ignore-submodules", &ignore_submodule_arg, N_("when"),
 		  N_("ignore changes to submodules, optional when: all, dirty, untracked. (Default: all)"),
+#ifdef __VMS
+		  PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *)"all" },
+#else
 		  PARSE_OPT_OPTARG, NULL, (intptr_t)"all" },
+#endif
 		OPT_COLUMN(0, "column", &s.colopts, N_("list untracked files in columns")),
 		OPT_BOOL(0, "no-renames", &no_renames, N_("do not detect renames")),
 		OPT_CALLBACK_F('M', "find-renames", &rename_score_arg,
@@ -1656,7 +1668,11 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_CLEANUP(&cleanup_arg),
 		OPT_BOOL(0, "status", &include_status, N_("include status in commit message template")),
 		{ OPTION_STRING, 'S', "gpg-sign", &sign_commit, N_("key-id"),
+#ifdef __VMS
+		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *) "" },
+#else
 		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
+#endif
 		/* end commit message options */
 
 		OPT_GROUP(N_("Commit contents options")),
@@ -1681,7 +1697,11 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 			 N_("terminate entries with NUL")),
 		OPT_BOOL(0, "amend", &amend, N_("amend previous commit")),
 		OPT_BOOL(0, "no-post-rewrite", &no_post_rewrite, N_("bypass post-rewrite hook")),
+#ifdef __VMS
+		{ OPTION_STRING, 'u', "untracked-files", &untracked_files_arg, N_("mode"), N_("show untracked files, optional modes: all, normal, no. (Default: all)"), PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *)"all" },
+#else
 		{ OPTION_STRING, 'u', "untracked-files", &untracked_files_arg, N_("mode"), N_("show untracked files, optional modes: all, normal, no. (Default: all)"), PARSE_OPT_OPTARG, NULL, (intptr_t)"all" },
+#endif
 		OPT_PATHSPEC_FROM_FILE(&pathspec_from_file),
 		OPT_PATHSPEC_FILE_NUL(&pathspec_file_nul),
 		/* end commit contents options */

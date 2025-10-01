@@ -1,0 +1,6 @@
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   file2.txt
+	renamed:    file1.txt -> new_file1.txt
+

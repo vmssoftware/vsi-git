@@ -2804,7 +2804,14 @@ static void show_stats(struct diffstat_t *data, struct diff_options *options)
 			 * slash we will find starting from "name" will
 			 * leave the resulting string still too long.
 			 */
+#ifdef __VMS
+			if(len <= 0)
+				name = "";
+			else
+				name += name_len - len;
+#else
 			name += name_len - len;
+#endif
 			slash = strchr(name, '/');
 			if (slash)
 				name = slash;

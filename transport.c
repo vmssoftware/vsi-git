@@ -490,8 +490,19 @@ cleanup:
 	close(data->fd[0]);
 	if (data->fd[1] >= 0)
 		close(data->fd[1]);
+
+#ifdef __VMS
+	/* VMS_TODO: Exit status of ssh.exe is 27 even though it succeeded */
+	char *is_ssh = NULL;
+	if (data->conn->args.v[0])
+		is_ssh = strstr(data->conn->args.v[0], "SSH$SSH.EXE");
+	int ret_tmp = finish_connect(data->conn);
+	if (ret_tmp && !(is_ssh && ret_tmp == 27))
+		ret = -1;
+#else
 	if (finish_connect(data->conn))
 		ret = -1;
+#endif
 	data->conn = NULL;
 
 	free_refs(refs_tmp);

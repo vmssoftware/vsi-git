@@ -47,6 +47,9 @@
 #include "path.h"
 #include "tempfile.h"
 #include "sigchain.h"
+#ifdef __VMS
+#include "vms_wrapper.h"
+#endif
 
 static VOLATILE_LIST_HEAD(tempfile_list);
 
@@ -329,8 +332,44 @@ int reopen_tempfile(struct tempfile *tempfile)
 	return tempfile->fd;
 }
 
+#ifdef __VMS
+int add_extension_if_needed(const char *path, char *modified_path, size_t max_len)
+{
+	size_t len = strlen(path);
+	if (snprintf(modified_path, max_len, "%s", path) >= max_len)
+		return -1; /* Error: path is too long */
+
+	/* Find the last occurrence of '/' (if any) */
+	const char *last_slash = strrchr(modified_path, '/');
+	if (!last_slash)
+		last_slash = modified_path;
+	else
+		last_slash++;
+
+	/* Find the last '.' after the last '/' */
+	const char *ext = strrchr(last_slash, '.');
+	if (!ext) {
+		if (len + 1 >= max_len)
+			return -1;	/* Error: not enough space to append '.' */
+		if (snprintf(modified_path + len, max_len - len, ".") >= max_len - len)
+			return -1;
+	}
+
+	return 0;
+}
+#endif
+
 int rename_tempfile(struct tempfile **tempfile_p, const char *path)
 {
+#ifdef __VMS
+	char modified_path[MAXPATHLEN + 1] = { 0 };
+	if (add_extension_if_needed(path, modified_path, sizeof(modified_path)) == 0) {
+		path = modified_path;
+	} else {
+		fprintf(stderr, "Error: Path is too long to modify\n");
+		return -1;
+	}
+#endif
 	struct tempfile *tempfile = *tempfile_p;
 
 	if (!is_tempfile_active(tempfile))
@@ -340,7 +379,10 @@ int rename_tempfile(struct tempfile **tempfile_p, const char *path)
 		delete_tempfile(tempfile_p);
 		return -1;
 	}
-
+#ifdef __VMS
+	if(access(path,F_OK) == 0)
+		remove(path);
+#endif
 	if (rename(tempfile->filename.buf, path)) {
 		int save_errno = errno;
 		delete_tempfile(tempfile_p);

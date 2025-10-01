@@ -125,7 +125,11 @@ static struct option builtin_clone_options[] = {
 		    N_("setup as shared repository")),
 	{ OPTION_CALLBACK, 0, "recurse-submodules", &option_recurse_submodules,
 	  N_("pathspec"), N_("initialize submodules in the clone"),
+#ifdef __VMS
+	  PARSE_OPT_OPTARG, recurse_submodules_cb, (intptr_t)(const void *)"." },
+#else
 	  PARSE_OPT_OPTARG, recurse_submodules_cb, (intptr_t)"." },
+#endif
 	OPT_ALIAS(0, "recursive", "recurse-submodules"),
 	OPT_INTEGER('j', "jobs", &max_jobs,
 		    N_("number of submodules cloned in parallel")),
@@ -1002,6 +1006,18 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 		dir = git_url_basename(repo_name, is_bundle, option_bare);
 	strip_dir_trailing_slashes(dir);
 
+#ifdef __VMS
+	struct strbuf target_path = STRBUF_INIT;
+	char tmp_dir[MAXPATHLEN];
+	snprintf(tmp_dir, sizeof(tmp_dir), "%s", dir);
+	if (get_logical_name(tmp_dir) != NULL) {
+		strbuf_addstr(&target_path, "./");
+		strbuf_addstr(&target_path, dir);
+
+		free(dir);
+		dir = xstrdup(target_path.buf);
+	}
+#endif
 	dest_exists = path_exists(dir);
 	if (dest_exists && !is_empty_dir(dir))
 		die(_("destination path '%s' already exists and is not "
@@ -1458,6 +1474,9 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 	free_refs(remote_head_points_at);
 	free(unborn_head);
 	free(dir);
+#ifdef __VMS
+	strbuf_release(&target_path);
+#endif
 	free(path);
 	free(repo_to_free);
 	junk_mode = JUNK_LEAVE_ALL;

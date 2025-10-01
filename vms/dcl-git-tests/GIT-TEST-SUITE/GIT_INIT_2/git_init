@@ -1,0 +1,37 @@
+
+Directory <PATH_TO_BE_REPLACED>.git]
+
+config.;1           description.;1      HEAD.;1             hooks.DIR;1        
+info.DIR;1          objects.DIR;1       refs.DIR;1          
+
+Total of 7 files.
+
+Directory <PATH_TO_BE_REPLACED>.git.hooks]
+
+applypatch-msg.sample;1                 commit-msg.sample;1 fsmonitor-watchman.sample;1
+post-update.sample;1                    pre-applypatch.sample;1
+pre-commit.sample;1 pre-merge-commit.sample;1               pre-push.sample;1  
+pre-rebase.sample;1 pre-receive.sample;1                    prepare-commit-msg.sample;1
+push-to-checkout.sample;1               update.sample;1     
+
+Total of 13 files.
+
+Directory <PATH_TO_BE_REPLACED>.git.info]
+
+exclude.;1          
+
+Total of 1 file.
+
+Directory <PATH_TO_BE_REPLACED>.git.objects]
+
+info.DIR;1          pack.DIR;1          
+
+Total of 2 files.
+
+Directory <PATH_TO_BE_REPLACED>.git.refs]
+
+heads.DIR;1         tags.DIR;1          
+
+Total of 2 files.
+
+Grand total of 5 directories, 25 files.

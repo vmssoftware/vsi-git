@@ -6,6 +6,8 @@
 # files in bin-wrappers, substituting
 # @@BUILD_DIR@@ and @@PROG@@.
 
+arch_name=$(uname -p)
+
 GIT_EXEC_PATH='@@BUILD_DIR@@'
 if test -n "$NO_SET_GIT_TEMPLATE_DIR"
 then
@@ -22,15 +24,15 @@ export GIT_EXEC_PATH GITPERLLIB PATH GIT_TEXTDOMAINDIR
 
 case "$GIT_DEBUGGER" in
 '')
-	exec "${GIT_EXEC_PATH}/@@PROG@@" "$@"
+	exec "${GIT_EXEC_PATH}/${arch_name}_BUILD/@@PROG@@" "$@"
 	;;
 1)
 	unset GIT_DEBUGGER
-	exec gdb --args "${GIT_EXEC_PATH}/@@PROG@@" "$@"
+	exec gdb --args "${GIT_EXEC_PATH}/${arch_name}_BUILD/@@PROG@@" "$@"
 	;;
 *)
 	GIT_DEBUGGER_ARGS="$GIT_DEBUGGER"
 	unset GIT_DEBUGGER
-	exec ${GIT_DEBUGGER_ARGS} "${GIT_EXEC_PATH}/@@PROG@@" "$@"
+	exec ${GIT_DEBUGGER_ARGS} "${GIT_EXEC_PATH}/${arch_name}_BUILD/@@PROG@@" "$@"
 	;;
 esac

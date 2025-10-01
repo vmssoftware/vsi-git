@@ -6,6 +6,9 @@
 #include "run-command.h"
 #include "string-list.h"
 #include "hashmap.h"
+#ifdef __VMS
+	#include <vms_wrapper.h>
+#endif
 
 #if defined(HAVE_DEV_TTY) || defined(GIT_WINDOWS_NATIVE)
 
@@ -596,7 +599,13 @@ void restore_term(void)
 
 char *git_terminal_prompt(const char *prompt, int echo)
 {
-	return getpass(prompt);
+	char *password;
+#ifdef __VMS
+	password = vms_read_passphrase(prompt, echo, 0);
+#else
+	password = getpass(prompt);
+#endif
+return password;
 }
 
 int read_key_without_echo(struct strbuf *buf)
@@ -610,7 +619,11 @@ int read_key_without_echo(struct strbuf *buf)
 		warning_displayed = 1;
 	}
 
+#ifdef __VMS
+	res = vms_read_passphrase("", 0, 0);
+#else
 	res = getpass("");
+#endif
 	strbuf_reset(buf);
 	if (!res)
 		return EOF;

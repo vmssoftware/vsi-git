@@ -321,6 +321,17 @@ void setup_path(void)
 	else
 		strbuf_addstr(&new_path, _PATH_DEFPATH);
 
+#if defined __VMS
+	static int set_vms_path = 0;
+	if (!set_vms_path) {
+		strbuf_addstr(&new_path, ":vim$root");
+#ifdef __VMS_IA64
+		strbuf_addstr(&new_path, ":sys$common/gnv/bin");
+#endif
+		set_vms_path = 1;
+	}
+#endif
+
 	setenv("PATH", new_path.buf, 1);
 
 	strbuf_release(&new_path);
@@ -341,7 +352,11 @@ int execv_git_cmd(const char **argv)
 	trace_argv_printf(nargv.v, "trace: exec:");
 
 	/* execvp() can only ever return if it fails */
+#ifdef __VMS
+	sane_execvp("GIT$ROOT:[GIT_CORE]GIT.EXE", (char **)nargv.v);
+#else
 	sane_execvp("git", (char **)nargv.v);
+#endif
 
 	trace_printf("trace: exec failed: %s\n", strerror(errno));
 

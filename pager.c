@@ -5,6 +5,10 @@
 #include "run-command.h"
 #include "sigchain.h"
 #include "alias.h"
+#ifdef __VMS
+#undef PAGER_ENV
+#define PAGER_ENV "LESS=FRX LV=-c"
+#endif
 
 int pager_use_color = 1;
 
@@ -111,6 +115,9 @@ void prepare_pager_args(struct child_process *pager_process, const char *pager)
 
 void setup_pager(void)
 {
+#ifdef __VMS_X86
+	return;
+#endif
 	const char *pager = git_pager(isatty(1));
 
 	if (!pager)

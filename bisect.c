@@ -452,7 +452,9 @@ static int register_ref(const char *refname, const struct object_id *oid,
 	struct strbuf good_prefix = STRBUF_INIT;
 	strbuf_addstr(&good_prefix, term_good);
 	strbuf_addstr(&good_prefix, "-");
-
+#ifdef __VMS
+	remove_last_char_if_dot((char *)refname);
+#endif
 	if (!strcmp(refname, term_bad)) {
 		current_bad_oid = xmalloc(sizeof(*current_bad_oid));
 		oidcpy(current_bad_oid, oid);

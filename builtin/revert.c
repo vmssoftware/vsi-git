@@ -103,7 +103,11 @@ static int run_sequencer(int argc, const char **argv, const char *prefix,
 		OPT_STRVEC('X', "strategy-option", &opts->xopts, N_("option"),
 			N_("option for merge strategy")),
 		{ OPTION_STRING, 'S', "gpg-sign", &opts->gpg_sign, N_("key-id"),
+#ifdef __VMS
+		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *) "" },
+#else
 		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
+#endif
 		OPT_END()
 	};
 	struct option *options = base_options;

@@ -17,6 +17,9 @@
 
 # Test the binaries we have just built.  The tests are kept in
 # t/ subdirectory and are run in 'trash directory' subdirectory.
+
+arch_name=$(uname -p)
+
 if test -z "$TEST_DIRECTORY"
 then
 	# ensure that TEST_DIRECTORY is an absolute path so that it
@@ -57,6 +60,7 @@ then
 		;;
 	esac
 fi
+GIT_BUILD_DIR="${GIT_BUILD_DIR}/${arch_name}_BUILD"
 
 # Prepend a string to a VAR using an arbitrary ":" delimiter, not
 # adding the delimiter if VAR or VALUE is empty. I.e. a generalized:
@@ -1518,7 +1522,7 @@ fi
 
 GITPERLLIB="$GIT_BUILD_DIR"/perl/build/lib
 export GITPERLLIB
-test -d "$GIT_BUILD_DIR"/templates/blt || {
+test -d "$GIT_BUILD_DIR"/../templates/blt || {
 	BAIL_OUT "You haven't built things yet, have you?"
 }
 
@@ -1634,10 +1638,12 @@ remove_trash_directory "$TRASH_DIRECTORY" || {
 	BAIL_OUT 'cannot prepare test area'
 }
 
+git=/GIT\$ROOT/GIT_CORE/GIT.EXE 
+
 remove_trash=t
 if test -z "$TEST_NO_CREATE_REPO"
 then
-	git init \
+	${git} init \
 	    ${TEST_CREATE_REPO_NO_TEMPLATE:+--template=} \
 	    "$TRASH_DIRECTORY" >&3 2>&4 ||
 	error "cannot run git init"

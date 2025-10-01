@@ -1182,6 +1182,10 @@ static void override_ssh_variant(enum ssh_variant *ssh_variant)
 static enum ssh_variant determine_ssh_variant(const char *ssh_command,
 					      int is_cmdline)
 {
+#ifdef __VMS
+	return VARIANT_SSH;
+#endif
+
 	enum ssh_variant ssh_variant = VARIANT_AUTO;
 	const char *variant;
 	char *p = NULL;
@@ -1375,8 +1379,13 @@ static void fill_ssh_args(struct child_process *conn, const char *ssh_host,
 		conn->use_shell = 0;
 
 		ssh = getenv("GIT_SSH");
-		if (!ssh)
-			ssh = "ssh";
+		if (!ssh) {
+#ifdef __VMS_IA64
+			ssh = "/SSH$ROOT/000000/BIN/IA64/SSH$SSH.EXE";
+#else
+			ssh = "/SSH$ROOT/000000/BIN/X86_64/SSH$SSH.EXE";
+#endif
+		}
 		variant = determine_ssh_variant(ssh, 0);
 	}
 
@@ -1399,6 +1408,9 @@ static void fill_ssh_args(struct child_process *conn, const char *ssh_host,
 	push_ssh_options(&conn->args, &conn->env, variant, port, version,
 			 flags);
 	strvec_push(&conn->args, ssh_host);
+#ifdef __VMS
+	strvec_push(&conn->args, "-T");
+#endif
 }
 
 /*

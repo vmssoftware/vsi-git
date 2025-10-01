@@ -1,0 +1,11 @@
+$ LOG_FILES = F$SEARCH("*.LOG;*")
+$ IF LOG_FILES .NES. ""
+$ THEN
+$   DELETE *.LOG;*
+$ ENDIF
+$!
+$ OUT_FILES = F$SEARCH("*.OUT;*")
+$ IF OUT_FILES .NES. ""
+$ THEN
+$   DELETE *.OUT;*
+$ ENDIF

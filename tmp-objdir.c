@@ -11,6 +11,9 @@
 #include "strvec.h"
 #include "quote.h"
 #include "object-store-ll.h"
+#ifdef __VMS
+#include "vms_wrapper.h"
+#endif
 
 struct tmp_objdir {
 	struct strbuf path;

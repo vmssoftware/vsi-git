@@ -1,6 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/* OpenVMS defines */
+/* For separating the OpenVMS specific parts. */
+#ifdef __VMS
+#include <vms_wrapper.h>
+#endif
+/* --------------- */
+
 #include "hashmap.h"
 #include "string-list.h"
 #include "repository.h"

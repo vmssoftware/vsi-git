@@ -366,7 +366,15 @@ static enum scld_error safe_create_leading_directories_1(char *path, int share)
 
 		slash_character = *slash;
 		*slash = '\0';
-		if (!stat(path, &st)) {
+
+		int stat_result = stat(path, &st);
+#ifdef __VMS
+		if (stat_result == -2) {
+			*slash = slash_character;
+			continue;
+		}
+#endif
+		if (!stat_result) {
 			/* path exists */
 			if (!S_ISDIR(st.st_mode)) {
 				errno = ENOTDIR;
@@ -1907,7 +1915,12 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 	strbuf_reset(tmp);
 	strbuf_add(tmp, filename, dirlen);
 	strbuf_addstr(tmp, "tmp_obj_XXXXXX");
+#ifdef __VMS
+	fd = git_mkstemp_mode(tmp->buf, 0666);
+#else 
 	fd = git_mkstemp_mode(tmp->buf, 0444);
+#endif
+
 	if (fd < 0 && dirlen && errno == ENOENT) {
 		/*
 		 * Make sure the directory exists; note that the contents
@@ -1924,7 +1937,7 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 
 		/* Try again */
 		strbuf_addstr(tmp, "/tmp_obj_XXXXXX");
-		fd = git_mkstemp_mode(tmp->buf, 0444);
+		fd = git_mkstemp_mode(tmp->buf, 0666);
 	}
 	return fd;
 }
@@ -2564,6 +2577,10 @@ int for_each_file_in_obj_subdir(unsigned int subdir_nr,
 	while ((de = readdir_skip_dot_and_dotdot(dir))) {
 		size_t namelen;
 
+#ifdef __VMS
+		/* Remove VMS specific '.' at the end of file name as hash should not contain '.' */
+		de->d_name[strlen(de->d_name) - 1] = '\0';
+#endif
 		namelen = strlen(de->d_name);
 		strbuf_setlen(path, baselen);
 		strbuf_add(path, de->d_name, namelen);

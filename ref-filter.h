@@ -114,11 +114,19 @@ struct ref_format {
 }
 
 /*  Macros for checking --merged and --no-merged options */
+#ifdef __VMS
+#define _OPT_MERGED_NO_MERGED(option, filter, h) \
+	{ OPTION_CALLBACK, 0, option, (filter), N_("commit"), (h), \
+	  PARSE_OPT_LASTARG_DEFAULT | PARSE_OPT_NONEG, \
+	  parse_opt_merge_filter, (intptr_t)(const void *) "HEAD" \
+	}
+#else
 #define _OPT_MERGED_NO_MERGED(option, filter, h) \
 	{ OPTION_CALLBACK, 0, option, (filter), N_("commit"), (h), \
 	  PARSE_OPT_LASTARG_DEFAULT | PARSE_OPT_NONEG, \
 	  parse_opt_merge_filter, (intptr_t) "HEAD" \
 	}
+#endif
 #define OPT_MERGED(f, h) _OPT_MERGED_NO_MERGED("merged", f, h)
 #define OPT_NO_MERGED(f, h) _OPT_MERGED_NO_MERGED("no-merged", f, h)
 

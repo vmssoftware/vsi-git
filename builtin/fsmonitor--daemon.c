@@ -1594,5 +1594,8 @@ int cmd_fsmonitor__daemon(int argc, const char **argv, const char *prefix UNUSED
 		usage_with_options(builtin_fsmonitor__daemon_usage, options);
 
 	die(_("fsmonitor--daemon not supported on this platform"));
+#ifdef __VMS
+	return -1;
+#endif
 }
 #endif

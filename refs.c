@@ -310,14 +310,44 @@ static int check_or_sanitize_refname(const char *refname, int flags,
 	return 0;
 }
 
+#ifdef __VMS
+/*
+ * We need to delete the last '.' character from the refname
+ * constant for the check_or_sanitize_refname function, which
+ * will make the "git log --reflog" command workable.
+ */
+static int wrapper_check_or_sanitize_refname(const char *refname, int flags, struct strbuf *out)
+{
+	int len = strlen(refname);
+	if (len > 1 && refname[len - 1] == '.') {
+		char *tmp_refname = (char *)malloc(len);
+		if (!tmp_refname)
+			return -1;
+		snprintf(tmp_refname, len, "%.*s", len - 1, refname);
+		int res = check_or_sanitize_refname(tmp_refname, flags, out);
+		free(tmp_refname);
+		return res;
+	}
+	return check_or_sanitize_refname(refname, flags, out);
+}
+#endif
+
 int check_refname_format(const char *refname, int flags)
 {
+#ifdef __VMS
+	return wrapper_check_or_sanitize_refname(refname, flags, NULL);
+#else
 	return check_or_sanitize_refname(refname, flags, NULL);
+#endif
 }
 
 void sanitize_refname_component(const char *refname, struct strbuf *out)
 {
+#ifdef __VMS
+	if (wrapper_check_or_sanitize_refname(refname, REFNAME_ALLOW_ONELEVEL, out))
+#else
 	if (check_or_sanitize_refname(refname, REFNAME_ALLOW_ONELEVEL, out))
+#endif
 		BUG("sanitizing refname '%s' check returned error", refname);
 }
 

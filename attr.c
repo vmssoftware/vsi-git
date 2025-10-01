@@ -199,8 +199,13 @@ static int attr_name_valid(const char *name, size_t namelen)
 	 * Attribute name cannot begin with '-' and must consist of
 	 * characters from [-A-Za-z0-9_.].
 	 */
+#ifdef __VMS
+	if (namelen == 0 || namelen == SIZE_MAX || *name == '-')
+		return 0;
+#else
 	if (namelen <= 0 || *name == '-')
 		return 0;
+#endif
 	while (namelen--) {
 		char ch = *name++;
 		if (! (ch == '-' || ch == '.' || ch == '_' ||

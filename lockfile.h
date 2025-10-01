@@ -124,9 +124,13 @@ struct lock_file {
 #define LOCK_INIT { 0 }
 
 /* String appended to a filename to derive the lockfile name: */
+#ifdef __VMS
+#define LOCK_SUFFIX "lockrnd2nme4vms"
+#define LOCK_SUFFIX_LEN 15
+#else 
 #define LOCK_SUFFIX ".lock"
 #define LOCK_SUFFIX_LEN 5
-
+#endif
 
 /*
  * Flags

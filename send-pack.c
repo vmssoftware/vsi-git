@@ -269,11 +269,17 @@ static int receive_status(struct packet_reader *reader, struct ref *refs)
 	return ret;
 }
 
+#ifdef __VMS
+int sideband_demux(int in UNUSED, int out, void *data)
+#else
 static int sideband_demux(int in UNUSED, int out, void *data)
+#endif
 {
 	int *fd = data, ret;
+#ifndef __VMS /* VMS_TODO: A better solution should be provided if possible. */
 	if (async_with_fork())
 		close(fd[1]);
+#endif
 	ret = recv_sideband("send-pack", fd[0], out);
 	close(out);
 	return ret;

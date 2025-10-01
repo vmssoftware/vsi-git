@@ -16,7 +16,7 @@ include ../shared.mak
 #GIT_TEST_OPTS = --verbose --debug
 SHELL_PATH ?= $(SHELL)
 TEST_SHELL_PATH ?= $(SHELL_PATH)
-PERL_PATH ?= /usr/bin/perl
+PERL_PATH ?= /PERL_ROOT/000000/PERL.EXE
 TAR ?= $(TAR)
 RM ?= rm -f
 PROVE ?= prove
@@ -100,6 +100,7 @@ clean-chainlint:
 
 check-chainlint:
 	@mkdir -p '$(CHAINLINTTMP_SQ)' && \
+	$(RM) '$(CHAINLINTTMP_SQ)'/* && \
 	for i in $(CHAINLINTTESTS); do \
 		echo "test_expect_success '$$i' '" && \
 		sed -e '/^# LINT: /d' chainlint/$$i.test && \

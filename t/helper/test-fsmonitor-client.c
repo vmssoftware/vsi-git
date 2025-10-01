@@ -16,6 +16,9 @@
 int cmd__fsmonitor_client(int argc UNUSED, const char **argv UNUSED)
 {
 	die("fsmonitor--daemon not available on this platform");
+#ifdef __VMS
+	return -1;
+#endif
 }
 #else
 

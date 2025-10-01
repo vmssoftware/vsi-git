@@ -1,0 +1,36 @@
+=PRODUCT VSI X86VMS GIT V2.44-1B Full
+1 'LICENSE
+=prompt VSI GIT is released under a BSD license, or a license more free than that. 
+VSI GIT contains no GPL code.
+
+1 'NOTICE
+=prompt © Copyright 2024 VMS Software, Inc.
+
+1 'PRODUCT
+=prompt VSI GIT
+The VSI GIT is a complete implementation of the Community
+Git. It uses Local, HTTP/HTTPS, SSH, Git protocols for communication.
+Include executables for supporting git add , git commit, push 
+and other commands.
+
+1 SSL_VERSION_REQUIRED
+=prompt *** ERROR: VSI GIT requires VSI SSL3 version V3.0-14 or later.
+          The version present does not satisfy that requirement.
+
+1 OPENVMS_VERSION_REQUIRED
+=prompt *** ERROR: VSI GIT requires OpenVMS above V9.2.
+          The version present does not satisfy that requirement.
+1 POST_INSTALL
+=prompt Post installation tasks required to run VSI GIT.
+    To define the necessary VSI GIT symbols and set up the environment
+    for using Git commands, the user must execute the following script:
+        $ @SYS$STARTUP:GIT$STARTUP.COM
+
+    or to ensure VSI GIT starts automatically, request the system
+    administrator to add the following line to SYS$MANAGER:SYLOGIN.COM:
+
+        $ GITSTART := SYS$STARTUP:GIT$STARTUP.COM
+        $ IF f$search("''GITSTART'") .NES. "" THEN @'GITSTART'
+
+    For more information, refer to this associated document:
+    - https://vsi.atlassian.net/wiki/spaces/GIT/overview 

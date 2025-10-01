@@ -2390,7 +2390,11 @@ int cmd_am(int argc, const char **argv, const char *prefix)
 		OPT_RERERE_AUTOUPDATE(&state.allow_rerere_autoupdate),
 		{ OPTION_STRING, 'S', "gpg-sign", &state.sign_commit, N_("key-id"),
 		  N_("GPG-sign commits"),
+#ifdef __VMS
+		  PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *) "" },
+#else
 		  PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
+#endif
 		OPT_CALLBACK_F(0, "empty", &state.empty_type, "(stop|drop|keep)",
 		  N_("how to handle empty patches"),
 		  PARSE_OPT_NONEG, am_option_parse_empty),

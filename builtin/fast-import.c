@@ -455,7 +455,9 @@ static void set_checkpoint_signal(void)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = checkpoint_signal;
 	sigemptyset(&sa.sa_mask);
+#ifndef __VMS
 	sa.sa_flags = SA_RESTART;
+#endif
 	sigaction(SIGUSR1, &sa, NULL);
 }
 

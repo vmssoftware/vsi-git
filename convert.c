@@ -626,7 +626,11 @@ struct filter_params {
 	const char *path;
 };
 
+#ifdef __VMS
+int filter_buffer_or_fd(int in UNUSED, int out, void *data)
+#else
 static int filter_buffer_or_fd(int in UNUSED, int out, void *data)
+#endif
 {
 	/*
 	 * Spawn cmd and feed the buffer contents through its stdin.

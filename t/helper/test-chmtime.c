@@ -125,8 +125,12 @@ int cmd__chmtime(int argc, const char **argv)
 
 		utb.actime = sb.st_atime;
 		utb.modtime = set_eq ? set_time : sb.st_mtime + set_time;
-
-		mtime = utb.modtime < 0 ? 0: utb.modtime;
+#ifndef __VMS
+//		time_t type is unsigned on OpenVMS
+		mtime = utb.modtime < 0 ? 0: utb.modtime; 
+#else
+		mtime = utb.modtime;
+#endif
 		if (get) {
 			printf("%"PRIuMAX"\n", mtime);
 		} else if (verbose) {

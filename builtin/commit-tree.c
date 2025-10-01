@@ -108,7 +108,11 @@ int cmd_commit_tree(int argc, const char **argv, const char *prefix)
 			N_("read commit log message from file"), PARSE_OPT_NONEG,
 			parse_file_arg_callback),
 		{ OPTION_STRING, 'S', "gpg-sign", &sign_commit, N_("key-id"),
+#ifdef __VMS
+			N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *) "" },
+#else
 			N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
+#endif
 		OPT_END()
 	};
 

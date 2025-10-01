@@ -1,6 +1,9 @@
 #ifndef PARSE_OPTIONS_H
 #define PARSE_OPTIONS_H
 
+#ifdef __VMS
+#include "vms_wrapper.h"
+#endif
 #include "gettext.h"
 
 /**
@@ -330,6 +333,19 @@ struct option {
 	.argh = N_("file"), \
 	.help = (h), \
 }
+#ifdef __VMS
+#define OPT_COLOR_FLAG(s, l, v, h) { \
+	.type = OPTION_CALLBACK, \
+	.short_name = (s), \
+	.long_name = (l), \
+	.value = (v), \
+	.argh = N_("when"), \
+	.help = (h), \
+	.flags = PARSE_OPT_OPTARG, \
+	.callback = parse_opt_color_flag_cb, \
+	.defval = (intptr_t)(const void *)"always", \
+}
+#else
 #define OPT_COLOR_FLAG(s, l, v, h) { \
 	.type = OPTION_CALLBACK, \
 	.short_name = (s), \
@@ -341,6 +357,7 @@ struct option {
 	.callback = parse_opt_color_flag_cb, \
 	.defval = (intptr_t)"always", \
 }
+#endif
 
 #define OPT_NOOP_NOARG(s, l) { \
 	.type = OPTION_CALLBACK, \
@@ -564,6 +581,18 @@ int parse_opt_tracking_mode(const struct option *, const char *, int);
 	.flags = (f), \
 	.callback = parse_opt_passthru_argv, \
 }
+#ifdef __VMS
+#define _OPT_CONTAINS_OR_WITH(l, v, h, f) { \
+	.type = OPTION_CALLBACK, \
+	.long_name = (l), \
+	.value = (v), \
+	.argh = N_("commit"), \
+	.help = (h), \
+	.flags = PARSE_OPT_LASTARG_DEFAULT | (f), \
+	.callback = parse_opt_commits, \
+	.defval = (intptr_t)(const void *) "HEAD", \
+}
+#else
 #define _OPT_CONTAINS_OR_WITH(l, v, h, f) { \
 	.type = OPTION_CALLBACK, \
 	.long_name = (l), \
@@ -574,6 +603,7 @@ int parse_opt_tracking_mode(const struct option *, const char *, int);
 	.callback = parse_opt_commits, \
 	.defval = (intptr_t) "HEAD", \
 }
+#endif
 #define OPT_CONTAINS(v, h) _OPT_CONTAINS_OR_WITH("contains", v, h, PARSE_OPT_NONEG)
 #define OPT_NO_CONTAINS(v, h) _OPT_CONTAINS_OR_WITH("no-contains", v, h, PARSE_OPT_NONEG)
 #define OPT_WITH(v, h) _OPT_CONTAINS_OR_WITH("with", v, h, PARSE_OPT_HIDDEN | PARSE_OPT_NONEG)

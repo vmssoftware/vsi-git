@@ -1,0 +1,21 @@
+
+Directory <PATH_TO_BE_REPLACED>.TEST.TEST2]
+
+branches.DIR;1      config.;1           description.;1      HEAD.;1            
+info.DIR;1          objects.DIR;1       refs.DIR;1          
+
+Total of 7 files.
+
+Directory <PATH_TO_BE_REPLACED>.TEST.TEST2.objects]
+
+info.DIR;1          pack.DIR;1          
+
+Total of 2 files.
+
+Directory <PATH_TO_BE_REPLACED>.TEST.TEST2.refs]
+
+heads.DIR;1         tags.DIR;1          
+
+Total of 2 files.
+
+Grand total of 3 directories, 11 files.

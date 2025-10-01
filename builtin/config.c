@@ -836,6 +836,9 @@ int cmd_config(int argc, const char **argv, const char *prefix)
 	if (actions & PAGING_ACTIONS)
 		setup_auto_pager("config", 1);
 
+#ifdef __VMS
+	SYS$SET_PROCESS_PROPERTIESW(0,0,0, PPROP$C_CASE_LOOKUP_TEMP, PPROP$K_CASE_BLIND, 0);
+#endif
 	if (actions == ACTION_LIST) {
 		check_argc(argc, 0, 0);
 		if (config_with_options(show_all_config, NULL,

@@ -14,6 +14,9 @@
 #include "repository.h"
 #include "setup.h"
 #include "strbuf.h"
+#ifdef __VMS
+#include "vms_wrapper.h"
+#endif
 
 static int guess_repository_type(const char *git_dir)
 {

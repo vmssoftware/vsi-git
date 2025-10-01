@@ -400,6 +400,11 @@ static int push_with_options(struct transport *transport, struct refspec *rs,
 	trace2_region_enter("push", "transport_push", the_repository);
 	err = transport_push(the_repository, transport,
 			     rs, flags, &reject_reasons);
+#ifdef __VMS
+	/* VMS_TODO: Exit status of ssh.exe is 27 even though it succeeded */
+	if (strchr(transport->url, '@') && err == 27)
+		err = 0;
+#endif
 	trace2_region_leave("push", "transport_push", the_repository);
 	if (err != 0) {
 		fprintf(stderr, "%s", push_get_color(PUSH_COLOR_ERROR));

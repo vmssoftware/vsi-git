@@ -3,6 +3,10 @@
 GVF=GIT-VERSION-FILE
 DEF_VER=v2.44.0
 
+if [ "$1" = "OpenVMS" ]; then
+    GVF=GIT-VERSION-FILE-VMS
+fi
+
 LF='
 '
 

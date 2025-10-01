@@ -464,7 +464,11 @@ int cmd_tag(int argc, const char **argv, const char *prefix)
 		{
 			OPTION_CALLBACK, 0, "points-at", &filter.points_at, N_("object"),
 			N_("print only tags of the object"), PARSE_OPT_LASTARG_DEFAULT,
+#ifdef __VMS
+			parse_opt_object_name, (intptr_t)(const void *) "HEAD"
+#else
 			parse_opt_object_name, (intptr_t) "HEAD"
+#endif
 		},
 		OPT_STRING(  0 , "format", &format.format, N_("format"),
 			   N_("format to use for the output")),

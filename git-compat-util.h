@@ -184,7 +184,7 @@ struct strbuf;
 #elif !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__USLC__) && \
       !defined(_M_UNIX) && !defined(__sgi) && !defined(__DragonFly__) && \
       !defined(__TANDEM) && !defined(__QNX__) && !defined(__MirBSD__) && \
-      !defined(__CYGWIN__)
+      !defined(__CYGWIN__) && !defined(__VMS)
 #define _XOPEN_SOURCE 600 /* glibc2 and AIX 5.3L need 500, OpenBSD needs 600 for S_ISLNK() */
 #define _XOPEN_SOURCE_EXTENDED 1 /* AIX 5.3L needs this */
 #endif
@@ -280,7 +280,9 @@ static inline int is_xplatform_dir_sep(int c)
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/statvfs.h>
-#include <termios.h>
+#ifndef __VMS
+	#include <termios.h>
+#endif
 #ifndef NO_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -675,6 +677,18 @@ static inline int const_error(void)
 #endif
 
 typedef void (*report_fn)(const char *, va_list params);
+
+#ifdef __VMS
+void set_die_builtin();
+void set_error_builtin();
+void set_warn_builtin();
+void inline reset_err_messages()
+{
+	set_die_builtin();
+	set_error_builtin();
+	set_warn_builtin();
+}
+#endif
 
 void set_die_routine(NORETURN_PTR report_fn routine);
 report_fn get_die_message_routine(void);
@@ -1419,8 +1433,13 @@ void bug_fl(const char *file, int line, const char *fmt, ...);
 #endif
 #endif
 
+#ifdef __VMS
+# undef SHELL_PATH
+# define SHELL_PATH "/SYS$COMMON/000000/gnv/bin/gnv$bash.exe"
+#else
 #ifndef SHELL_PATH
 # define SHELL_PATH "/bin/sh"
+#endif
 #endif
 
 #ifndef _POSIX_THREAD_SAFE_FUNCTIONS
@@ -1557,5 +1576,9 @@ static inline void *container_of_or_null_offset(void *ptr, size_t offset)
 #define OFFSETOF_VAR(ptr, member) \
 	((uintptr_t)&(ptr)->member - (uintptr_t)(ptr))
 #endif /* !__GNUC__ */
+
+#ifdef __VMS
+#include <vms_wrapper.h>
+#endif
 
 #endif

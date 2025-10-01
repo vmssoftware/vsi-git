@@ -165,11 +165,13 @@ ifeq ($(uname_S),Darwin)
 	# Note that we do not employ the same workaround as above where we manually
 	# add gettext. The issue was fixed more than three years ago by now, and at
 	# that point there haven't been any ARM-based Macs yet.
-	else ifeq ($(shell test -d /opt/homebrew/ && echo y),y)
-		BASIC_CFLAGS += -I/opt/homebrew/include
-		BASIC_LDFLAGS += -L/opt/homebrew/lib
-		ifeq ($(shell test -x /opt/homebrew/bin/msgfmt && echo y),y)
-			MSGFMT = /opt/homebrew/bin/msgfmt
+	else 
+		ifeq ($(shell test -d /opt/homebrew/ && echo y),y)
+			BASIC_CFLAGS += -I/opt/homebrew/include
+			BASIC_LDFLAGS += -L/opt/homebrew/lib
+			ifeq ($(shell test -x /opt/homebrew/bin/msgfmt && echo y),y)
+				MSGFMT = /opt/homebrew/bin/msgfmt
+			endif
 		endif
 	endif
 

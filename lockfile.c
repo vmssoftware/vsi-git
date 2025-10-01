@@ -203,10 +203,36 @@ char *get_locked_file_path(struct lock_file *lk)
 	return strbuf_detach(&ret, NULL);
 }
 
+#ifdef __VMS
+int filename_has_dot(const char *filename) 
+{
+	const char *last_slash = strrchr(filename, '/');
+	char *dot = NULL;
+
+	if (last_slash)
+		dot = strchr(last_slash, '.');
+	else
+		dot = strchr(filename, '.');
+
+	return !dot ? 0 : 1;
+}
+#endif
+
 int commit_lock_file(struct lock_file *lk)
 {
 	char *result_path = get_locked_file_path(lk);
-
+#ifdef __VMS
+	if (!filename_has_dot(result_path))
+	{
+		const int size_of_result_path = strlen(result_path);
+		struct strbuf temp = STRBUF_INIT;
+		strbuf_init(&temp, size_of_result_path + 2);
+		strbuf_attach(&temp, result_path, size_of_result_path, size_of_result_path + 1);
+		strbuf_addch(&temp, '.');
+		free(result_path);
+		result_path = strbuf_detach(&temp, NULL);
+	}
+#endif
 	if (commit_lock_file_to(lk, result_path)) {
 		int save_errno = errno;
 		free(result_path);

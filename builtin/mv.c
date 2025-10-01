@@ -166,6 +166,40 @@ free_return:
 
 int cmd_mv(int argc, const char **argv, const char *prefix)
 {
+	const char **new_argv = argv;
+#ifdef __VMS
+	glob_t result;
+	memset(&result, 0, sizeof(glob_t));
+
+	if (strpbrk(argv[1], "*?[]") != NULL) {
+		int prev_glob_setting = set_feature_default("DECC$GLOB_UNIX_STYLE", 1);
+		int prev_filename_setting = set_feature_default("DECC$FILENAME_UNIX_ONLY", 1);
+
+		result = expand_wildcards(argv[1]);
+
+		if (prev_glob_setting != -1)
+			set_feature_default("DECC$GLOB_UNIX_STYLE", prev_glob_setting);
+		if (prev_filename_setting != -1)
+			set_feature_default("DECC$FILENAME_UNIX_ONLY", prev_filename_setting);
+	}
+
+	if (result.gl_pathc > 0) {
+		int old_argc = argc;
+		argc = result.gl_pathc + argc - 1;
+		new_argv = malloc(sizeof(char *) * argc);
+		if (!new_argv) {
+			globfree(&result);
+			die(_("Memory allocation failed"));
+		}
+
+		new_argv[0] = argv[0];
+		memcpy(&new_argv[1], result.gl_pathv, result.gl_pathc * sizeof(char *));
+		memcpy(&new_argv[result.gl_pathc + 1], &argv[2], (old_argc - 2) * sizeof(char *));
+
+		globfree(&result);
+	}
+#endif
+
 	int i, flags, gitmodules_modified = 0;
 	int verbose = 0, show_only = 0, force = 0, ignore_errors = 0, ignore_sparse = 0;
 	struct option builtin_mv_options[] = {
@@ -192,7 +226,7 @@ int cmd_mv(int argc, const char **argv, const char *prefix)
 
 	git_config(git_default_config, NULL);
 
-	argc = parse_options(argc, argv, prefix, builtin_mv_options,
+	argc = parse_options(argc, new_argv, prefix, builtin_mv_options,
 			     builtin_mv_usage, 0);
 	if (--argc < 1)
 		usage_with_options(builtin_mv_usage, builtin_mv_options);
@@ -201,7 +235,7 @@ int cmd_mv(int argc, const char **argv, const char *prefix)
 	if (repo_read_index(the_repository) < 0)
 		die(_("index file corrupt"));
 
-	source = internal_prefix_pathspec(prefix, argv, argc, 0);
+	source = internal_prefix_pathspec(prefix, new_argv, argc, 0);
 	CALLOC_ARRAY(modes, argc);
 
 	/*
@@ -210,22 +244,22 @@ int cmd_mv(int argc, const char **argv, const char *prefix)
 	 * "git mv directory no-such-dir/".
 	 */
 	flags = KEEP_TRAILING_SLASH;
-	if (argc == 1 && is_directory(argv[0]) && !is_directory(argv[1]))
+	if (argc == 1 && is_directory(new_argv[0]) && !is_directory(new_argv[1]))
 		flags = 0;
-	dest_path = internal_prefix_pathspec(prefix, argv + argc, 1, flags);
+	dest_path = internal_prefix_pathspec(prefix, new_argv + argc, 1, flags);
 	dst_w_slash = add_slash(dest_path[0]);
 	submodule_gitfile = xcalloc(argc, sizeof(char *));
 
 	if (dest_path[0][0] == '\0')
 		/* special case: "." was normalized to "" */
-		destination = internal_prefix_pathspec(dest_path[0], argv, argc, DUP_BASENAME);
+		destination = internal_prefix_pathspec(dest_path[0], new_argv, argc, DUP_BASENAME);
 	else if (!lstat(dest_path[0], &st) &&
 			S_ISDIR(st.st_mode)) {
-		destination = internal_prefix_pathspec(dst_w_slash, argv, argc, DUP_BASENAME);
+		destination = internal_prefix_pathspec(dst_w_slash, new_argv, argc, DUP_BASENAME);
 	} else {
 		if (!path_in_sparse_checkout(dst_w_slash, &the_index) &&
 		    empty_dir_has_sparse_contents(dst_w_slash)) {
-			destination = internal_prefix_pathspec(dst_w_slash, argv, argc, DUP_BASENAME);
+			destination = internal_prefix_pathspec(dst_w_slash, new_argv, argc, DUP_BASENAME);
 			dst_mode = SKIP_WORKTREE_DIR;
 		} else if (argc != 1) {
 			die(_("destination '%s' is not a directory"), dest_path[0]);
@@ -445,6 +479,25 @@ remove_entry:
 
 	for (i = 0; i < argc; i++) {
 		const char *src = source[i], *dst = destination[i];
+		char *temp_dst = NULL;
+#ifdef __VMS
+		if (strchr(dst, '/') == NULL && strchr(dst, '\\') == NULL) {
+			/*
+			** Allocate space for the new destination path.
+			** Additional 3 bytes:
+			** - 2 bytes for "./" prefix
+			** - 1 byte for the null terminator.
+			*/
+			size_t new_len = strlen(dst) + 3;
+			temp_dst = malloc(new_len);
+			if (!temp_dst) {
+				fprintf(stderr, "Error: Memory allocation failed\n");
+				continue;
+			}
+			snprintf(temp_dst, new_len, "./%s", dst);
+		}
+#endif
+		const char *final_dst = temp_dst ? temp_dst : dst;
 		enum update_mode mode = modes[i];
 		int pos;
 		int sparse_and_dirty = 0;
@@ -457,9 +510,16 @@ remove_entry:
 			printf(_("Renaming %s to %s\n"), src, dst);
 		if (show_only)
 			continue;
+
+		int rename_status;
+#ifdef __VMS
+		rename_status = vms_rename(src, final_dst);
+#else
+		rename_status = rename(src, final_dst);
+#endif
 		if (!(mode & (INDEX | SPARSE | SKIP_WORKTREE_DIR)) &&
 		    !(dst_mode & (SKIP_WORKTREE_DIR | SPARSE)) &&
-		    rename(src, dst) < 0) {
+		    rename_status < 0) {
 			if (ignore_errors)
 				continue;
 			die_errno(_("renaming '%s' failed"), src);
@@ -529,10 +589,17 @@ remove_entry:
 					string_list_append(&dirty_paths, dst);
 					safe_create_leading_directories(dst_dup);
 					FREE_AND_NULL(dst_dup);
-					rename(src, dst);
+#ifdef __VMS
+					vms_rename(src, final_dst);
+#else
+					rename(src, final_dst);
+#endif
 				}
 			}
 		}
+#ifdef __VMS
+		free(temp_dst);
+#endif
 	}
 
 	/*
@@ -571,5 +638,9 @@ remove_entry:
 	UNLEAK(dest_path);
 	free(submodule_gitfile);
 	free(modes);
+#ifdef __VMS
+	if (new_argv != argv)
+		free(new_argv);
+#endif
 	return 0;
 }

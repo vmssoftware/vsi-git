@@ -73,6 +73,9 @@ static int ut_002exit(int argc UNUSED, const char **argv)
 		die("expect <exit_code>");
 
 	exit(rc);
+#ifdef __VMS
+	return rc;
+#endif
 }
 
 /*
@@ -207,6 +210,9 @@ static int ut_007BUG(int argc UNUSED, const char **argv UNUSED)
 	 * Exercise BUG() to ensure that the message is printed to trace2.
 	 */
 	BUG("the bug message");
+#ifdef __VMS
+	return -1;
+#endif
 }
 
 static int ut_008bug(int argc UNUSED, const char **argv UNUSED)
@@ -229,6 +235,9 @@ static int ut_010bug_BUG(int argc UNUSED, const char **argv UNUSED)
 {
 	bug("a %s message", "bug");
 	BUG("a %s message", "BUG");
+#ifdef __VMS
+	return -1;
+#endif
 }
 
 /*

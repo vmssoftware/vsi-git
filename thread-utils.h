@@ -36,6 +36,10 @@
 
 #define pthread_create(thread, attr, fn, data) \
 	dummy_pthread_create(thread, attr, fn, data)
+	
+#if defined(__VMS) && defined(pthread_join)
+#undef pthread_join
+#endif
 #define pthread_join(thread, retval) \
 	dummy_pthread_join(thread, retval)
 

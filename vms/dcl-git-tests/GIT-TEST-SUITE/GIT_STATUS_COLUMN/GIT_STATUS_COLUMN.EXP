@@ -1,0 +1,12 @@
+On branch master
+
+No commits yet
+
+Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)
+	new file:   test_file_1.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	test_file_2.txt test_file_3.txt test_file_4.txt
+

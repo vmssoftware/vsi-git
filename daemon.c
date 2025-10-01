@@ -1169,6 +1169,9 @@ static int service_loop(struct socketlist *socklist)
 			}
 		}
 	}
+#ifdef __VMS
+	return 0;
+#endif
 }
 
 #ifdef NO_POSIX_GOODIES
@@ -1184,6 +1187,9 @@ static struct credentials *prepare_credentials(const char *user_name,
     const char *group_name)
 {
 	die("--user not supported on this platform");
+#ifdef __VMS
+	return NULL;
+#endif
 }
 
 #else

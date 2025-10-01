@@ -847,7 +847,11 @@ static int everything_local(struct fetch_pack_args *args,
 	return retval;
 }
 
+#ifdef __VMS
+int sideband_demux_fetch(int in UNUSED, int out, void *data)
+#else
 static int sideband_demux(int in UNUSED, int out, void *data)
+#endif
 {
 	int *xd = data;
 	int ret;
@@ -931,7 +935,11 @@ static int get_pack(struct fetch_pack_args *args,
 		 * xd[0], spits out band#2 to stderr, and feeds us band#1
 		 * through demux->out.
 		 */
+#ifdef __VMS
+		demux.proc = sideband_demux_fetch;
+#else
 		demux.proc = sideband_demux;
+#endif
 		demux.data = xd;
 		demux.out = -1;
 		demux.isolate_sigpipe = 1;
@@ -2089,6 +2097,9 @@ struct ref *fetch_pack(struct fetch_pack_args *args,
 		opt.shallow_file = alternate_shallow_file;
 		if (args->deepen)
 			opt.is_deepening_fetch = 1;
+#ifdef __VMS
+		close(shallow_lock.lock.tempfile->fd);
+#endif
 		if (check_connected(iterate_ref_map, &iterator, &opt)) {
 			error(_("remote did not send all necessary objects"));
 			free_refs(ref_cpy);
@@ -2097,6 +2108,9 @@ struct ref *fetch_pack(struct fetch_pack_args *args,
 			goto cleanup;
 		}
 		args->connectivity_checked = 1;
+#ifdef __VMS
+		shallow_lock.lock.tempfile->fd = open(shallow_lock.lock.tempfile->filename.buf, O_RDWR);
+#endif
 	}
 
 	update_shallow(args, sought, nr_sought, &si);

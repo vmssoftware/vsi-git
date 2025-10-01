@@ -120,6 +120,23 @@ static report_fn error_routine = error_builtin;
 static report_fn warn_routine = warn_builtin;
 static int (*die_is_recursing)(void) = die_is_recursing_builtin;
 
+#ifdef __VMS
+void set_warn_builtin()
+{
+	warn_routine = warn_builtin;
+}
+
+void set_error_builtin()
+{
+	error_routine = error_builtin;
+}
+
+void set_die_builtin()
+{
+	die_routine = die_builtin;
+}
+#endif
+
 void set_die_routine(NORETURN_PTR report_fn routine)
 {
 	die_routine = routine;

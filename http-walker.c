@@ -7,6 +7,9 @@
 #include "transport.h"
 #include "packfile.h"
 #include "object-store-ll.h"
+#ifdef __VMS
+#include "curl_loader.h"
+#endif
 
 struct alt_base {
 	char *base;

@@ -750,7 +750,14 @@ char *interpolate_path(const char *path, int real_home)
 		const char *username = path + 1;
 		size_t username_len = first_slash - username;
 		if (username_len == 0) {
+#ifdef __VMS
+			char *tmp = getenv("HOME");
+			char *home = decc$translate_vms(tmp);
+			if ((int)home == 0 || (int)home == -1)
+				home = tmp;
+#else 
 			const char *home = getenv("HOME");
+#endif
 			if (!home)
 				goto return_null;
 			if (real_home)
@@ -924,7 +931,11 @@ int adjust_shared_perm(const char *path)
 
 void safe_create_dir(const char *dir, int share)
 {
+#ifdef __VMS
+	if (mkdir_set_version(dir, 0777) < 0) {
+#else
 	if (mkdir(dir, 0777) < 0) {
+#endif
 		if (errno != EEXIST) {
 			perror(dir);
 			exit(1);

@@ -1,0 +1,62 @@
+product VSI X86VMS GIT V2.44-1B full;
+
+	if ((not <software VSI X86VMS VMS version above V9.2>));
+		error OPENVMS_VERSION_REQUIRED abort;
+	end if;
+
+	if (not <software VSI X86VMS SSL3 version minimum V3.0-15>);
+		error SSL_VERSION_REQUIRED abort;
+	end if;
+
+	directory [GIT];
+	directory [GIT.GIT_CORE];
+	directory [GIT.ETC];
+	directory [GIT.TEMPLATES];
+	directory "[GIT.TEMPLATES.branches]";
+	directory "[GIT.TEMPLATES.hooks]";
+	directory "[GIT.TEMPLATES.info]";
+
+	file "[GIT.TEMPLATES]description.";
+	file "[GIT.TEMPLATES.info]exclude.";
+	file "[GIT.TEMPLATES.hooks]hooks__applypatch_msg.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__commit_msg.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__fsmonitor_watchman.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__post_update.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__pre_applypatch.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__pre_commit.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__pre-merge_commit.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__prepare_commit_msg.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__pre_push.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__pre_rebase.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__pre_receive.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__push_to_checkout.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__sendemail_validate.sample";
+	file "[GIT.TEMPLATES.hooks]hooks__update.sample";
+
+	file [GIT.EXT_LIBS]LIBCURL$SHR64.EXE;
+	file [SYS$STARTUP]GIT$STARTUP.COM;
+	file [GIT.GIT_CORE]GIT.EXE;
+	file [GIT.GIT_CORE]GIT-DAEMON.EXE;
+	file [GIT.GIT_CORE]GIT-HTTP-BACKEND.EXE;
+	file [GIT.GIT_CORE]GIT-HTTP-FETCH.EXE;
+	file [GIT.GIT_CORE]GIT-HTTP-PUSH.EXE;
+	file [GIT.GIT_CORE]GIT-IMAP-SEND.EXE;
+	file [GIT.GIT_CORE]GIT-REMOTE-HTTP.EXE;
+	file [GIT.GIT_CORE]GIT-SHELL.EXE;
+	file [GIT.GIT_CORE]ASYNC_PROC_WRAPPER.EXE;
+	file [GIT.GIT_CORE]GIT-UPLOAD-PACK.EXE;
+	file [GIT.GIT_CORE]GIT-RECEIVE-PACK.EXE;
+	file [GIT.GIT_CORE]GIT-UPLOAD-ARCHIVE.EXE;
+
+	module [000000]GIT.HLP type help generation 5 module GIT;
+	file "[SYSHLP]GIT.HLB"
+		assemble execute ("LIBRARY/HELP/CREAT PCSI$DESTINATION:[SYSHLP]GIT.HLB PCSI$SOURCE:[000000]GIT.HLP")
+		assemble uses ([000000]GIT.HLP);
+
+	execute
+		postinstall "@PCSI$SOURCE:[GIT.GIT_CORE]GIT_INIT.COM"
+		uses [GIT.GIT_CORE]GIT_INIT.COM;
+
+information POST_INSTALL phase after with helptext;
+
+end product;

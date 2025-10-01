@@ -1148,7 +1148,11 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			    "that are being rebased")),
 		{ OPTION_STRING, 'S', "gpg-sign", &gpg_sign, N_("key-id"),
 			N_("GPG-sign commits"),
+#ifdef __VMS
+			PARSE_OPT_OPTARG, NULL, (intptr_t)(const void *) "" },
+#else
 			PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
+#endif
 		OPT_AUTOSTASH(&options.autostash),
 		OPT_STRING_LIST('x', "exec", &options.exec, N_("exec"),
 				N_("add exec lines after each commit of the "

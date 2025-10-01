@@ -19,6 +19,9 @@
 #include "packfile.h"
 #include "object-store-ll.h"
 #include "commit-reach.h"
+#ifdef __VMS
+#include "curl_loader.h"
+#endif
 
 #ifdef EXPAT_NEEDS_XMLPARSE_H
 #include <xmlparse.h>

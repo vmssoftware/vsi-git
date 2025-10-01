@@ -1,3 +1,6 @@
+#ifdef __VMS
+#include "async_procs.h"
+#endif
 #include "git-compat-util.h"
 #include "run-command.h"
 #include "environment.h"
@@ -206,7 +209,16 @@ static char *locate_in_PATH(const char *file)
 		}
 		strbuf_addstr(&buf, file);
 
+#ifdef __VMS
+		strbuf_addstr(&buf, ".exe");
+		SYS$SET_PROCESS_PROPERTIESW(0,0,0, PPROP$C_CASE_LOOKUP_TEMP, PPROP$K_CASE_BLIND, 0);
+		int r = is_executable(buf.buf);
+		if (!get_logical_name("GIT$DISABLE_CASE_SENSITIVE_MODE"))
+			SYS$SET_PROCESS_PROPERTIESW(0,0,0, PPROP$C_CASE_LOOKUP_TEMP, PPROP$K_CASE_SENSITIVE, 0);
+		if (r) 
+#else
 		if (is_executable(buf.buf))
+#endif
 			return strbuf_detach(&buf, NULL);
 
 		if (!*end)
@@ -300,7 +312,12 @@ static const char **prepare_shell_cmd(struct strvec *out, const char **argv)
 }
 
 #ifndef GIT_WINDOWS_NATIVE
+#ifdef __VMS
+static int child_notifier = 0;
+struct child_err child_notifier_buf;
+#else
 static int child_notifier = -1;
+#endif
 
 enum child_errcode {
 	CHILD_ERR_CHDIR,
@@ -318,6 +335,11 @@ struct child_err {
 
 static void child_die(enum child_errcode err)
 {
+#ifdef __VMS
+	child_notifier_buf.err = err;
+	child_notifier_buf.syserr = errno;
+	child_notifier = 1;
+#else	
 	struct child_err buf;
 
 	buf.err = err;
@@ -326,13 +348,26 @@ static void child_die(enum child_errcode err)
 	/* write(2) on buf smaller than PIPE_BUF (min 512) is atomic: */
 	xwrite(child_notifier, &buf, sizeof(buf));
 	_exit(1);
+#endif
 }
 
+#ifdef __VMS
+static int child_dup2(int fd, int to)
+{
+	if (dup2(fd, to) < 0)
+	{
+		child_die(CHILD_ERR_DUP2);
+		return -1;
+	}
+	return 0;
+}
+#else
 static void child_dup2(int fd, int to)
 {
 	if (dup2(fd, to) < 0)
 		child_die(CHILD_ERR_DUP2);
 }
+#endif
 
 static void child_close(int fd)
 {
@@ -440,15 +475,29 @@ static int prepare_cmd(struct strvec *out, const struct child_process *cmd)
 
 static char **prep_childenv(const char *const *deltaenv)
 {
+#ifdef __VMS
+	#pragma pointer_size save
+	#pragma pointer_size short
+#endif
 	extern char **environ;
+	const char *const *p;
+#ifdef __VMS
+	#pragma pointer_size restore
+#endif
 	char **childenv;
 	struct string_list env = STRING_LIST_INIT_DUP;
 	struct strbuf key = STRBUF_INIT;
-	const char *const *p;
 	int i;
 
 	/* Construct a sorted string list consisting of the current environ */
+#ifdef __VMS
+	#pragma pointer_size save
+	#pragma pointer_size short
+#endif
 	for (p = (const char *const *) environ; p && *p; p++) {
+#ifdef __VMS
+	#pragma pointer_size restore
+#endif
 		const char *equals = strchr(*p, '=');
 
 		if (equals) {
@@ -462,17 +511,18 @@ static char **prep_childenv(const char *const *deltaenv)
 	string_list_sort(&env);
 
 	/* Merge in 'deltaenv' with the current environ */
-	for (p = deltaenv; p && *p; p++) {
-		const char *equals = strchr(*p, '=');
+	const char *const *lp;
+	for (lp = deltaenv; lp && *lp; lp++) {
+		const char *equals = strchr(*lp, '=');
 
 		if (equals) {
 			/* ('key=value'), insert or replace entry */
 			strbuf_reset(&key);
-			strbuf_add(&key, *p, equals - *p);
-			string_list_insert(&env, key.buf)->util = (void *) *p;
+			strbuf_add(&key, *lp, equals - *lp);
+			string_list_insert(&env, key.buf)->util = (void *) *lp;
 		} else {
 			/* otherwise ('key') remove existing entry */
-			string_list_remove(&env, *p, 0);
+			string_list_remove(&env, *lp, 0);
 		}
 	}
 
@@ -660,6 +710,9 @@ static void trace_run_command(const struct child_process *cp)
 
 int start_command(struct child_process *cmd)
 {
+#ifdef __VMS
+	child_notifier = 0;
+#endif
 	int need_in, need_out, need_err;
 	int fdin[2], fdout[2], fderr[2];
 	int failed_errno;
@@ -672,7 +725,11 @@ int start_command(struct child_process *cmd)
 
 	need_in = !cmd->no_stdin && cmd->in < 0;
 	if (need_in) {
+#ifdef __VMS
+		if (socketpair(AF_UNIX, SOCK_STREAM, 0, fdin) < 0) {
+#else
 		if (pipe(fdin) < 0) {
+#endif
 			failed_errno = errno;
 			if (cmd->out > 0)
 				close(cmd->out);
@@ -686,7 +743,11 @@ int start_command(struct child_process *cmd)
 		&& !cmd->stdout_to_stderr
 		&& cmd->out < 0;
 	if (need_out) {
+#ifdef __VMS
+		if (socketpair(AF_UNIX, SOCK_STREAM, 0, fdout) < 0) {
+#else
 		if (pipe(fdout) < 0) {
+#endif
 			failed_errno = errno;
 			if (need_in)
 				close_pair(fdin);
@@ -700,7 +761,11 @@ int start_command(struct child_process *cmd)
 
 	need_err = !cmd->no_stderr && cmd->err < 0;
 	if (need_err) {
+#ifdef __VMS
+		if (socketpair(AF_UNIX, SOCK_STREAM, 0, fderr) < 0) {
+#else
 		if (pipe(fderr) < 0) {
+#endif
 			failed_errno = errno;
 			if (need_in)
 				close_pair(fdin);
@@ -731,7 +796,9 @@ fail_pipe:
 
 #ifndef GIT_WINDOWS_NATIVE
 {
+#ifndef __VMS
 	int notify_pipe[2];
+#endif
 	int null_fd = -1;
 	char **childenv;
 	struct strvec argv = STRVEC_INIT;
@@ -746,8 +813,10 @@ fail_pipe:
 		goto end_of_spawn;
 	}
 
+#ifndef __VMS
 	if (pipe(notify_pipe))
 		notify_pipe[0] = notify_pipe[1] = -1;
+#endif
 
 	if (cmd->no_stdin || cmd->no_stdout || cmd->no_stderr) {
 		null_fd = xopen("/dev/null", O_RDWR | O_CLOEXEC);
@@ -766,6 +835,21 @@ fail_pipe:
 	 * never be released in the child process.  This means only
 	 * Async-Signal-Safe functions are permitted in the child.
 	 */
+#ifdef __VMS
+	if (!strcmp(argv.v[1], SHELL_PATH) && access(SHELL_PATH, F_OK)) {
+		printf(
+			"Please make sure:\n"
+			"- You have the correct access rights\n"
+			"- The repository exists at the specified location.\n"
+			"- The command syntax is correct.\n"
+		);
+		exit(1);
+	}
+
+	int reserved_stdin;
+	int reserved_stdout;
+	int reserved_stderr;
+#endif
 	cmd->pid = fork();
 	failed_errno = errno;
 	if (!cmd->pid) {
@@ -778,6 +862,67 @@ fail_pipe:
 		set_error_routine(child_error_fn);
 		set_warn_routine(child_warn_fn);
 
+#ifdef __VMS
+		child_notifier = 0;
+
+		int dont_set_cloexec = 0;
+		for (int i = 1; i < argv.nr; i++)
+			if (!strcmp(argv.v[i], "remote-https")
+				|| strstr(argv.v[i], "SSH$SSH.EXE") 
+				|| strstr(argv.v[i], "upload-pack")
+				|| strstr(argv.v[i], "receive-pack"))
+				dont_set_cloexec = 1;
+
+		reserved_stdin = dup(0);
+		reserved_stdout = dup(1);
+		reserved_stderr = dup(2);
+
+		if (cmd->no_stdin) {
+			if (child_dup2(null_fd, 0) == -1)
+				goto error_notifier;
+		} else if (need_in) {
+			if (child_dup2(fdin[0], 0) == -1)
+				goto error_notifier;
+			set_cloexec(fdin[0]);
+			set_cloexec(fdin[1]);
+		} else if (cmd->in) {
+			if (child_dup2(cmd->in, 0) == -1)
+				goto error_notifier;
+			set_cloexec(cmd->in);
+		}
+
+		if (cmd->no_stderr) {
+			if (child_dup2(null_fd, 2) == -1)
+				goto error_notifier;
+		} else if (need_err) {
+			if (child_dup2(fderr[1], 2) == -1)
+				goto error_notifier;
+			set_cloexec(fderr[0]);
+			set_cloexec(fderr[1]);
+		} else if (cmd->err > 1) {
+			if (child_dup2(cmd->err, 2) == -1)
+				goto error_notifier;
+			set_cloexec(cmd->err);
+		}
+
+		if (cmd->no_stdout) {
+			if (child_dup2(null_fd, 1) == -1)
+				goto error_notifier;
+		} else if (cmd->stdout_to_stderr) {
+			if (child_dup2(2, 1) == -1)
+				goto error_notifier;
+		} else if (need_out) {
+			if (child_dup2(fdout[1], 1) == -1)
+				goto error_notifier;
+			if (!dont_set_cloexec)
+				set_cloexec(fdout[0]);
+			set_cloexec(fdout[1]);
+		} else if (cmd->out > 1) {
+			if (child_dup2(cmd->out, 1) == -1)
+				goto error_notifier;
+			set_cloexec(cmd->out);
+		}
+#else
 		close(notify_pipe[0]);
 		set_cloexec(notify_pipe[1]);
 		child_notifier = notify_pipe[1];
@@ -813,9 +958,17 @@ fail_pipe:
 			child_dup2(cmd->out, 1);
 			child_close(cmd->out);
 		}
+#endif
 
 		if (cmd->dir && chdir(cmd->dir))
+#ifdef __VMS
+		{
 			child_die(CHILD_ERR_CHDIR);
+			goto error_notifier;
+		}
+#else
+			child_die(CHILD_ERR_CHDIR);
+#endif
 
 		/*
 		 * restore default signal handlers here, in case
@@ -828,7 +981,14 @@ fail_pipe:
 		}
 
 		if (sigprocmask(SIG_SETMASK, &as.old, NULL) != 0)
+#ifdef __VMS
+		{
 			child_die(CHILD_ERR_SIGPROCMASK);
+			goto error_notifier;
+		}
+#else
+			child_die(CHILD_ERR_SIGPROCMASK);
+#endif
 
 		/*
 		 * Attempt to exec using the command and arguments starting at
@@ -836,16 +996,47 @@ fail_pipe:
 		 * be used in the event exec failed with ENOEXEC at which point
 		 * we will try to interpret the command using 'sh'.
 		 */
-		execve(argv.v[1], (char *const *) argv.v + 1,
-		       (char *const *) childenv);
-		if (errno == ENOEXEC)
-			execve(argv.v[0], (char *const *) argv.v,
-			       (char *const *) childenv);
+#ifdef __VMS
+		SYS$SET_PROCESS_PROPERTIESW(0,0,0, PPROP$C_CASE_LOOKUP_TEMP, PPROP$K_CASE_BLIND, 0);
 
-		if (cmd->silent_exec_failure && errno == ENOENT)
+		int is_shell_path = !strcmp(argv.v[1], SHELL_PATH);
+		for (int i = 1; i < argv.nr; i++) {
+			if (!strcmp(argv.v[i], "remote-https"))
+				argv.v[i] = "remote-http";
+			else if (is_shell_path)
+				chg_path_if_needed(&argv.v[i]);
+		}
+#endif
+		execve(argv.v[1], (char **) argv.v + 1,
+			(char **) childenv);
+
+		if (errno == ENOEXEC)
+			execve(argv.v[0], (char **) argv.v,
+			       (char **) childenv);
+
+		if (errno == ENOENT) {
+			if (cmd->silent_exec_failure)
+#ifdef __VMS
+			{
+				child_die(CHILD_ERR_SILENT);
+				goto error_notifier;
+			}
+#else
+				child_die(CHILD_ERR_SILENT);
+#endif
 			child_die(CHILD_ERR_SILENT);
-		child_die(CHILD_ERR_ERRNO);
+		} else {
+			child_die(CHILD_ERR_ERRNO);
+		}
+#ifdef __VMS
+		goto error_notifier;
+#endif
 	}
+
+#ifdef __VMS
+	reset_err_messages();
+#endif
+
 	atfork_parent(&as);
 	if (cmd->pid < 0)
 		error_errno("cannot fork() for %s", cmd->args.v[0]);
@@ -859,6 +1050,24 @@ fail_pipe:
 	 * Note that use of this infrastructure is completely advisory,
 	 * therefore, we keep error checks minimal.
 	 */
+#ifdef __VMS
+error_notifier:
+	reset_err_messages();
+	dup2(reserved_stdin, 0);
+	dup2(reserved_stdout, 1);
+	dup2(reserved_stderr, 2);
+	close(reserved_stdin);
+	close(reserved_stdout);
+	close(reserved_stderr);
+	if (child_notifier == 1) {
+		cerr.err = child_notifier_buf.err;
+		cerr.syserr = child_notifier_buf.syserr;
+		wait_or_whine(cmd->pid, cmd->args.v[0], 0);
+		child_err_spew(cmd, &cerr);
+		failed_errno = errno;
+		cmd->pid = -1;
+	}
+#else
 	close(notify_pipe[1]);
 	if (xread(notify_pipe[0], &cerr, sizeof(cerr)) == sizeof(cerr)) {
 		/*
@@ -871,6 +1080,7 @@ fail_pipe:
 		cmd->pid = -1;
 	}
 	close(notify_pipe[0]);
+#endif
 
 	if (null_fd >= 0)
 		close(null_fd);
@@ -933,6 +1143,10 @@ end_of_spawn:
 }
 #endif
 
+#ifdef __VMS
+	if(!get_logical_name("GIT$DISABLE_CASE_SENSITIVE_MODE"))
+		SYS$SET_PROCESS_PROPERTIESW(0,0,0, PPROP$C_CASE_LOOKUP_TEMP, PPROP$K_CASE_SENSITIVE, 0);
+#endif
 	if (cmd->pid < 0) {
 		trace2_child_exit(cmd, -1);
 
@@ -1083,7 +1297,11 @@ static void git_atexit_dispatch(void)
 		git_atexit_hdlrs.handlers[i-1]();
 }
 
+#ifdef __VMS
+void git_atexit_clear(void)
+#else
 static void git_atexit_clear(void)
+#endif
 {
 	free(git_atexit_hdlrs.handlers);
 	memset(&git_atexit_hdlrs, 0, sizeof(git_atexit_hdlrs));
@@ -1104,7 +1322,11 @@ int git_atexit(void (*handler)(void))
 }
 #define atexit git_atexit
 
+#ifdef __VMS
+int process_is_async;
+#else
 static int process_is_async;
+#endif
 int in_async(void)
 {
 	return process_is_async;
@@ -1123,8 +1345,15 @@ void check_pipe(int err)
 		if (in_async())
 			async_exit(141);
 
+		/*
+		** SIG_DFL causes %SYSTEM-F-NOMBX error on OpenVMS.
+		** As we most likely want to terminate the program when EPIPE occurs
+		** just exit the program to avoid showing %SYSTEM-F-NOMBX error message.
+		*/
+#ifndef __VMS
 		signal(SIGPIPE, SIG_DFL);
 		raise(SIGPIPE);
+#endif
 		/* Should never happen, but just in case... */
 		exit(141);
 	}
@@ -1134,11 +1363,20 @@ int start_async(struct async *async)
 {
 	int need_in, need_out;
 	int fdin[2], fdout[2];
+#ifdef __VMS
+	int proc_in_0, proc_in_1;
+	int proc_out_0, proc_out_1;
+#else
 	int proc_in, proc_out;
+#endif
 
 	need_in = async->in < 0;
 	if (need_in) {
+#ifndef __VMS
 		if (pipe(fdin) < 0) {
+#else
+		if (socketpair(AF_UNIX, SOCK_STREAM, 0, fdin) < 0) {
+#endif
 			if (async->out > 0)
 				close(async->out);
 			return error_errno("cannot create pipe");
@@ -1148,7 +1386,11 @@ int start_async(struct async *async)
 
 	need_out = async->out < 0;
 	if (need_out) {
+#ifndef __VMS
 		if (pipe(fdout) < 0) {
+#else
+		if (socketpair(AF_UNIX, SOCK_STREAM, 0, fdout) < 0) {
+#endif
 			if (need_in)
 				close_pair(fdin);
 			else if (async->in)
@@ -1158,19 +1400,55 @@ int start_async(struct async *async)
 		async->out = fdout[0];
 	}
 
-	if (need_in)
+	if (need_in) {
+#ifdef __VMS
+		proc_in_0 = fdin[0];
+		proc_in_1 = fdin[1];
+#else
 		proc_in = fdin[0];
-	else if (async->in)
+#endif
+	}
+	else if (async->in) {
+#ifdef __VMS
+		proc_in_0 = async->in;
+		proc_in_1 = -1;
+#else
 		proc_in = async->in;
-	else
+#endif
+	}
+	else {
+#ifdef __VMS
+		proc_in_0 = -1;
+		proc_in_1 = -1;
+#else
 		proc_in = -1;
+#endif
+	}
 
-	if (need_out)
+	if (need_out) {
+#ifdef __VMS
+		proc_out_1 = fdout[1];
+		proc_out_0 = fdout[0];
+#else
 		proc_out = fdout[1];
-	else if (async->out)
+#endif
+	}
+	else if (async->out) {
+#ifdef __VMS
+		proc_out_1 = async->out;
+		proc_out_0 = -1;
+#else
 		proc_out = async->out;
-	else
+#endif
+	}
+	else {
+#ifdef __VMS
+		proc_out_1 = -1;
+		proc_out_0 = -1;
+#else
 		proc_out = -1;
+#endif
+	}
 
 #ifdef NO_PTHREADS
 	/* Flush stdio before fork() to avoid cloning buffers */
@@ -1182,6 +1460,7 @@ int start_async(struct async *async)
 		goto error;
 	}
 	if (!async->pid) {
+#ifndef __VMS
 		if (need_in)
 			close(fdin[1]);
 		if (need_out)
@@ -1189,8 +1468,48 @@ int start_async(struct async *async)
 		git_atexit_clear();
 		process_is_async = 1;
 		exit(!!async->proc(proc_in, proc_out, async->data));
-	}
+#else
+		/* Determine the function name to pass to the wrapper */
+		const char *func_name;
+		if (async->proc) {
+			if (async->proc == filter_buffer_or_fd)
+				func_name = "filter_buffer_or_fd";
+			else if (async->proc == sideband_demux)
+				func_name = "sideband_demux";
+			else if (async->proc == sideband_demux_fetch)
+				func_name = "sideband_demux_fetch";
+			else
+				func_name = "copy_to_sideband";
+		} else {
+			perror("Got no async function!");
+			exit(EXIT_FAILURE);
+		}
 
+		/* Prepare arguments for execve */
+		char proc_in_0_str[10], proc_in_1_str[10];
+		char proc_out_0_str[10], proc_out_1_str[10];
+		snprintf(proc_in_0_str, sizeof(proc_in_0_str), "%d", proc_in_0);
+		snprintf(proc_in_1_str, sizeof(proc_in_1_str), "%d", proc_in_1);
+		snprintf(proc_out_0_str, sizeof(proc_out_0_str), "%d", proc_out_0);
+		snprintf(proc_out_1_str, sizeof(proc_out_1_str), "%d", proc_out_1);
+		char *argv[] = {
+			"async_proc_wrapper",
+			(char *)func_name,
+			proc_in_0_str,
+			proc_in_1_str,
+			proc_out_0_str,
+			proc_out_1_str,
+			(char *)async->data,
+			NULL
+		};
+		char *envp[] = { NULL };
+
+		if (execve("/GIT$ROOT/GIT_CORE/ASYNC_PROC_WRAPPER.EXE", argv, envp) == -1) {
+			perror("Parent - Execve failed!");
+			exit(EXIT_FAILURE);
+		}
+#endif
+	}
 	mark_child_for_cleanup(async->pid, NULL);
 
 	if (need_in)
