@@ -1,53 +1,19 @@
+/*
+ * Copyright (C) 2025 VMS Software, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see https://www.gnu.org/licenses/
+ */
+
 #pragma module SYSLOG "V1.03"
-
-/*
-**
-** ? Copyright 2002 Hewlett-Packard Development Company, L.P.
-**
-** Hewlett-Packard and the Hewlett-Packard logo are trademarks
-** of Hewlett-Packard Development Company L.P. in the U.S. and/or
-** other countries.
-**
-** Confidential computer software.
-** Valid license from Hewlett-Packard required for possession, use
-** or copying.  Consistent with FAR 12.211 and 12.212, Commercial
-** Computer Software, Computer Software Documentation, and Technical
-** Data for Commercial.  Items are licensed to the U.S. Government
-** under vendor's standard commercial license.
-**
-** Hewlett-Packard shall not be liable for technical or editorial
-** errors or omissions contained herein.  The information is provided
-** "as is" without warranty of any kind and is subject to change
-** without notice.  The warranties for Hewlett-Packard products are
-** set forth in the express warranty statements accompanying such
-** products.  Nothing herein should be construed as constituting an
-** additional warranty.
-**
-*/
-
-/*
-**
-**  FACILITY:
-**
-**      Secure Web Server
-**
-**  ABSTRACT:
-**
-**  Interface for openlog, syslog, closelog
-**
-**  AUTHOR:
-**
-**      Matthew Doremus
-**
-**
-**  CREATION DATE:   August 29, 2001
-**
-**  MODIFICATION HISTORY:
-**
-**  V1.00 Matthew Doremus                 29-Aug-2001
-**        Initial development.
-**
-*/
 
 #ifndef __NEW_STARLET
 #define __NEW_STARLET

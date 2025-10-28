@@ -2,6 +2,11 @@
  * "git mv" builtin command
  *
  * Copyright (C) 2006 Johannes Schindelin
+ * Copyright (C) 2025 VMS Software, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation version 2 of the License.
  */
 #define USE_THE_INDEX_VARIABLE
 #include "builtin.h"

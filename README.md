@@ -72,3 +72,170 @@ and the name as (depending on your mood):
 [Documentation/SubmittingPatches]: Documentation/SubmittingPatches
 [Documentation/CodingGuidelines]: Documentation/CodingGuidelines
 [po/README.md]: po/README.md
+
+# VSI Git Build and Installation Guide
+
+### Overview
+The **IA64** system is used to build the VSI Git project for both **IA64** and **X86** architectures.
+For the **X86** build, a **cross-compiler** is used, and the build process is managed with **GNU/GNV make**.
+
+---
+
+### Build Preconditions
+To verify that the correct versions of **GNV** and **SSL** are installed, execute the following commands:
+```bash
+$ PROD SHOW PROD *GNV*
+$ PROD SHOW PROD *SSL3*
+```
+Ensure the following versions (or higher) are installed:
+
+- **GNV** *V3.0-2*
+- **SSL** *V3.0-15 or later*
+
+### X86 Requirements
+To verify that `SYS$LIBRARY:NATTABLES.EXE` is correctly set on your system, execute
+the following commands:
+```bash
+$ MCR AUTHORIZE MODIFY <USERNAME> /CLITABLES=SYS$LIBRARY:NATTABLES.EXE
+$ Re-Login
+```
+
+### Initialization
+To properly initialize the build environment, the following command should be executed
+before running the make command:
+```bash
+$ SET PROCESS/PARSE_STYLE=EXTENDED
+$ DEFINE DECC$FILENAME_UNIX_NO_VERSION ENABLE
+$ DEFINE DECC$ARGV_PARSE_STYLE ENABLE
+$ DEFINE DECC$EFS_CHARSET ENABLE
+$ DEFINE OPENSSL "SSL3$INCLUDE:"
+$ DEFINE DECC$TEXT_LIBRARY SYS$LIBRARY:SYS$LIB_C.TLB
+$ @GNU:[LIB]GNV_SETUP.COM
+```
+
+### Additional Initialization for *Cross-Build X86*
+```bash
+$ DEFINE DECC$TEXT_LIBRARY "X86$LIBRARY:SYS$LIB_C.TLB"
+$ DEFINE X86$LIBRARY_ADD <This should refer to appropriate libs like: LIBEXPAT.OLB, LIBZ64.OLB, SSL3$LIBCRYPTO_SHR.EXE, SSL3$LIBSSL_SHR.EXE>
+$ @SYS$STARTUP:X86_XTOOLS$SYLOGIN.COM
+```
+
+### Build Steps
+To run the build procedure and create the installation **kit**, follow these steps:
+#### 1. Navigate to Your Git Project Directory
+```bash
+$ SET DEFAULT <GIT_PROJECT_DIRECTORY>
+```
+#### 2. Navigate to the VMS Subdirectory
+```bash
+$ SET DEFAULT [.VMS]
+```
+#### 3. Run the Build Script
+Execute the build script to build the project and create the **kit**.
+For the first build, you **must** use the **-C** flag to perform a clean build.
+```bash
+@BUILDALL.COM <ARCHITECTURE_NAME> <FLAG>
+```
+
+---
+
+### Alternative Build Method
+
+You can also build and create the installation **kit** manually **without using** the *BUILDALL.COM* script.
+Here are the steps for doing it manually:
+
+#### 1. X86 Systems Specific
+For X86 systems, you must change `/CLITABLES` to `SYS$LIBRARY:NATTABLES.EXE`.
+```bash
+$ MCR AUTHORIZE MODIFY <USER_NAME> /CLITABLES=SYS$LIBRARY:NATTABLES.EXE
+$ Re-Login
+```
+#### 2. Initialization
+Before starting the build, make sure you have completed all environment setup commands from the **Initialization** section above.
+For **X86 cross-builds**, also perform the steps in **Additional Initialization for *Cross-Build X86***.
+
+#### 3. Navigate to Your Git Project Directory
+```bash
+$ SET DEFAULT <GIT_PROJECT_DIRECTORY>
+```
+#### 4. Switch to Bash
+```bash
+$ @SYS$STARTUP:GNV$SETUP
+$ BASH
+```
+Within Bash:
+```bash
+BASH-4.3$ vms/config.sh <platform architecture, native by default>
+```
+#### 5. Navigate to Build Folder Depending on the architecture, the build folder will vary (*e.g., IA64_build for IA64*):
+```bash
+BASH-4.3$ cd <build_folder>
+```
+#### 6. Run the Make Command
+```bash
+BASH-4.3$ make
+```
+Exit Bash:
+```bash
+BASH-4.3$ exit
+```
+
+### Restore /CLITABLES After Build X86
+To restore the `/CLITABLES`, you can use the following commands:
+```bash
+$ MCR AUTHORIZE MODIFY <USERNAME> /CLITABLES=DCLTABLES
+$ Re-Login
+```
+
+### Creating An Installation Kit
+- Copy Executables
+```bash
+$ COPY [.<BUILD_PLATFORM>]*.EXE; [-.VMS.KIT.<BUILD_PLATFORM>]
+```
+- To Create the Installation Kit for **IA64**
+```bash
+$ PRODUCT PACKAGE GIT/SOURCE=[-.VMS.KIT.IA64]VSI-I64VMS-GIT-V0244-1B-1.PCSI$DESC /DESTINATION=<PATH_TO_KIT> /OPT=NOCONFIRM /FORMAT=SEQUENTIAL /MATERIAL=<DESTINATION_FOR_FILES...>
+```
+- To Create the Installation Kit for **X86**
+```bash
+$ PRODUCT PACKAGE /BASE=X86VMS GIT/SOURCE=[-.VMS.KIT.X86_64]VSI-X86VMS-GIT-V0244-1B-1.PCSI$DESC /DESTINATION=<PATH_TO_KIT> /OPT=NOCONFIRM /FORMAT=SEQUENTIAL /MATERIAL=<DESTINATION_FOR_FILES...>
+```
+
+---
+
+### Installation
+```bash
+$ PRODUCT INSTALL GIT /SOURCE=<PATH WITH KIT>
+```
+
+### Remove Product
+```bash
+$ PRODUCT REMOVE GIT
+```
+
+---
+
+### Pre-Requisites for Using VSI Git
+Before starting with VSI Git, please complete the following steps:
+#### 1. If the CA Certificate is Invalid:
+```bash
+$ DEFINE GIT_SSL_NO_VERIFY 1
+```
+#### 2. Set Process Parsing Style to Extended:
+```bash
+$ SET PROCESS/PARSE_STYLE=EXTENDED
+```
+#### 3. Set Terminal Inquiry:
+```bash
+$ SET TERMINAL/INQUIRE
+```
+
+### Restrictions
+- Repositories and your login directory must be on an **ODS-5** file system.
+- If multiple versions of the same file are within the Git directory, it is necessary to purge the directory before using Git commands such as `stash`, `checkout`, `merge`, etc. This helps avoid conflicts or errors during these operations.
+- VSI Git currently supports only **Unix-like** paths.
+
+### Performance Notes
+
+For better performance when working with large repositories containing many files, it is recommended to adjust the `core.packedGitWindowSize` configuration value.
+Setting this value to **1 MiB** (or **32 MiB**) significantly improves performance.
