@@ -1020,6 +1020,18 @@ fail_pipe:
 			else if (is_shell_path)
 				chg_path_if_needed(&argv.v[i]);
 		}
+
+		/*
+		 * Run via SHELL_PATH when requested; do not fall back to direct exec.
+		 * trace2_hook_name is set in hook.c
+		 */
+		if (cmd->trace2_hook_name && cmd->use_shell) {
+			execve(argv.v[0], (char **) argv.v,
+			       (char **) childenv);
+			/* shell failed */
+			child_die(CHILD_ERR_ERRNO);
+			goto error_notifier;
+		}
 #endif
 		execve(argv.v[1], (char **) argv.v + 1,
 			(char **) childenv);

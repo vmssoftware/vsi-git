@@ -1464,7 +1464,18 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 		return 1;
 
 	junk_mode = JUNK_LEAVE_REPO;
+
+#ifdef __VMS
+	int had_unix = set_feature_default("DECC$UNIX_PATH_BEFORE_LOGNAME", 0);
+	int had_disable = set_feature_default("DECC$DISABLE_TO_VMS_LOGNAME_TRANSLATION", 1);
+#endif
 	err = checkout(submodule_progress, filter_submodules);
+#ifdef __VMS
+	if (had_disable != -1)
+		set_feature_default("DECC$DISABLE_TO_VMS_LOGNAME_TRANSLATION", had_disable);
+	if (had_unix != -1)
+		set_feature_default("DECC$UNIX_PATH_BEFORE_LOGNAME", had_unix);
+#endif
 
 	free(remote_name);
 	strbuf_release(&reflog_msg);

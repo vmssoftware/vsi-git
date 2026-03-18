@@ -1,10 +1,10 @@
-=PRODUCT VSI I64VMS GIT V2.44-1B Full
+=PRODUCT VSI I64VMS GIT V2.44-1C Full
 1 'LICENSE
 =prompt VSI GIT is released under a BSD license, or a license more free than that. 
 VSI GIT contains no GPL code.
 
 1 'NOTICE
-=prompt © Copyright 2024 VMS Software, Inc.
+=prompt (c) Copyright 2026 VMS Software, Inc.
 
 1 'PRODUCT
 =prompt VSI GIT
@@ -18,11 +18,11 @@ and other main commands.
           The version present does not satisfy that requirement.
 
 1 SSL_VERSION_REQUIRED
-=prompt *** ERROR: VSI GIT requires VSI SSL3 version V3.0-14 or later.
+=prompt *** ERROR: VSI GIT requires VSI SSL3 version V3.0-18 or later.
           The version present does not satisfy that requirement.
 
 1 RTL_VERSION_REQUIRED
-=prompt *** ERROR: VSI GIT requires RTL V6 or higher.
+=prompt *** ERROR: VSI GIT requires RTL V9 or higher.
           The version present does not satisfy that requirement.
           
 1 POST_INSTALL

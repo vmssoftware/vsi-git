@@ -47,6 +47,25 @@ int hook_exists(const char *name)
 	return !!find_hook(name);
 }
 
+#ifdef __VMS
+static int hook_needs_shell(const char *path)
+{
+	FILE *fp = fopen(path, "r");
+	struct strbuf line = STRBUF_INIT;
+	int needs = 0;
+
+	if (!fp)
+		return 0;
+
+	if (strbuf_getline(&line, fp) != EOF)
+		needs = starts_with(line.buf, "#!");
+
+	strbuf_release(&line);
+	fclose(fp);
+	return needs;
+}
+#endif
+
 static int pick_next_hook(struct child_process *cp,
 			  struct strbuf *out UNUSED,
 			  void *pp_cb,
@@ -68,6 +87,11 @@ static int pick_next_hook(struct child_process *cp,
 	cp->stdout_to_stderr = 1;
 	cp->trace2_hook_name = hook_cb->hook_name;
 	cp->dir = hook_cb->options->dir;
+
+#ifdef __VMS
+	if (hook_needs_shell(hook_path))
+		cp->use_shell = 1;
+#endif
 
 	strvec_push(&cp->args, hook_path);
 	strvec_pushv(&cp->args, hook_cb->options->args.v);

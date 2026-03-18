@@ -126,6 +126,9 @@ static void scan_rerere_dir(struct rerere_dir *rr_dir)
 
 	if (!dir)
 		return;
+#ifdef __VMS
+	int prev_dropdotnotype = set_feature_default("DECC$READDIR_DROPDOTNOTYPE", 1);
+#endif
 	while ((de = readdir(dir)) != NULL) {
 		int variant;
 
@@ -137,6 +140,10 @@ static void scan_rerere_dir(struct rerere_dir *rr_dir)
 			rr_dir->status[variant] |= RR_HAS_PREIMAGE;
 		}
 	}
+#ifdef __VMS
+	if (prev_dropdotnotype != -1)
+		set_feature_default("DECC$READDIR_DROPDOTNOTYPE", prev_dropdotnotype);
+#endif
 	closedir(dir);
 }
 

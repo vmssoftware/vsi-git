@@ -1,3 +1,4 @@
+[![Build status](https://github.com/git/git/workflows/CI/badge.svg)](https://github.com/git/git/actions?query=branch%3Amaster+event%3Apush)
 
 Git - fast, scalable, distributed revision control system
 =========================================================
@@ -89,9 +90,9 @@ $ PROD SHOW PROD *SSL3*
 Ensure the following versions (or higher) are installed:
 
 - **GNV** *V3.0-2*
-- **SSL** *V3.0-15 or later*
+- **SSL** *V3.0-18 or later*
 
-### X86 Requirements
+### X86 Requirements for *Cross-Build*
 To verify that `SYS$LIBRARY:NATTABLES.EXE` is correctly set on your system, execute
 the following commands:
 ```bash
@@ -109,13 +110,11 @@ $ DEFINE DECC$ARGV_PARSE_STYLE ENABLE
 $ DEFINE DECC$EFS_CHARSET ENABLE
 $ DEFINE OPENSSL "SSL3$INCLUDE:"
 $ DEFINE DECC$TEXT_LIBRARY SYS$LIBRARY:SYS$LIB_C.TLB
-$ @GNU:[LIB]GNV_SETUP.COM
 ```
 
 ### Additional Initialization for *Cross-Build X86*
 ```bash
 $ DEFINE DECC$TEXT_LIBRARY "X86$LIBRARY:SYS$LIB_C.TLB"
-$ DEFINE X86$LIBRARY_ADD <This should refer to appropriate libs like: LIBEXPAT.OLB, LIBZ64.OLB, SSL3$LIBCRYPTO_SHR.EXE, SSL3$LIBSSL_SHR.EXE>
 $ @SYS$STARTUP:X86_XTOOLS$SYLOGIN.COM
 ```
 
@@ -160,6 +159,7 @@ $ SET DEFAULT <GIT_PROJECT_DIRECTORY>
 #### 4. Switch to Bash
 ```bash
 $ @SYS$STARTUP:GNV$SETUP
+$! @GNU:[LIB]GNV_SETUP.COM for IA64
 $ BASH
 ```
 Within Bash:

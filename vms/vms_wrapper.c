@@ -233,12 +233,15 @@ void correct_case_chdir()
 int set_feature_default(const char *name, int value)
 {
 	int index = decc$feature_get_index(name);
-
 	if (index == -1)
 		return -1;
 
 	/* decc$feature_get_value returns -1 in case of error */
-	int prev_value = decc$feature_get_value(index, 1);
+	int prev_value = decc$feature_get_value(index, __FEATURE_MODE_CURVAL);
+	if (prev_value == -1) {
+		perror(name);
+		return -1;
+	}
 
 	if (decc$feature_set_value(index, 1, value) == -1) {
 		perror(name);

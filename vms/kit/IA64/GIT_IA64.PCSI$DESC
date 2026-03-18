@@ -1,15 +1,15 @@
-product VSI I64VMS GIT V2.44-1B full;
+product VSI I64VMS GIT V2.44-1C full;
 
 	-- make sure VMS V8.4-2L1 or above is installed
 	if (not <software VSI I64VMS VMS version minimum V8.4-2L1>);
 		error OpenVMS_VERSION_REQUIRED abort;
 	end if;
 
-	if (not <software VSI I64VMS SSL3 version minimum V3.0-15>);
+	if (not <software VSI I64VMS SSL3 version minimum V3.0-18>);
 		error SSL_VERSION_REQUIRED abort;
 	end if;
 
-	if ((not <software VSI I64VMS VMS842L1I_RTL version minimum V6.0>) and (not <software VSI I64VMS VMS842L3I_RTL version minimum V6.0>));
+	if ((not <software VSI I64VMS VMS842L1I_RTL version minimum V9.0>) and (not <software VSI I64VMS VMS842L3I_RTL version minimum V9.0>));
 		error RTL_VERSION_REQUIRED abort;
 	end if;
 
